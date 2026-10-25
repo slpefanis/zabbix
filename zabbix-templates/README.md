@@ -70,6 +70,33 @@ Create a custom role through the Graylog REST API.
 }
 ```
 
+
+### Create the Data Node Monitoring Role
+
+Run the following command using a Graylog administrator account.
+
+```bash
+curl -sS -i --max-time 15 \
+  -u admin \
+  -X POST \
+  -H 'Content-Type: application/json' \
+  -H 'X-Requested-By: Zabbix' \
+  -d '{
+    "name": "Zabbix Data Node Monitoring",
+    "description": "Allows Zabbix to query Data Node OpenSearch metrics through the Graylog API",
+    "permissions": [
+      "datanode:opensearchproxy"
+    ],
+    "read_only": false
+  }' \
+  'https://graylog.example.com/api/roles'
+```
+
+**Note:** Replace `graylog.example.com` with your Graylog server address. The command prompts for the administrator password.
+
+**Expected result:** `HTTP 201 Created`.
+
+
 Authenticate with a Graylog administrator account when creating the role.
 
 Assign the new role to the monitoring service account.
