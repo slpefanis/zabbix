@@ -2,78 +2,55 @@
 
 ## Overview
 
-This template monitors Graylog 7.x using the Graylog REST API.
+This template monitors **Graylog 7.x** through its REST API using a single Zabbix host.
 
-It provides automatic discovery and monitoring of Graylog application nodes, OpenSearch Data Nodes, inputs and Sidecars.
+Features include:
 
-Metrics are collected centrally using Zabbix HTTP agent items, with dependent items for efficient data collection.
-
-Includes platform health, ingestion, storage and Sidecar diagnostic dashboards.
-
-## Requirements
-
-- Zabbix 7.4 or higher
-- Graylog 7.x
-- HTTPS connectivity to the Graylog REST API
-- Graylog service account with API token
-- Appropriate Graylog API permissions
+- Automatic discovery of Graylog application nodes, OpenSearch Data Nodes, inputs and Sidecars.
+- Message throughput, journal utilisation and processing health.
+- OpenSearch cluster health, index storage and Data Node performance.
+- Sidecar heartbeat and collector failure monitoring.
+- Three dashboards, including an HTML Sidecar diagnostics table.
+- Low-noise alerting using configurable thresholds.
 
 No Zabbix agent or additional scripts are required for API monitoring.
 
+## Requirements
+
+- Zabbix 7.4 or later
+- Graylog 7.x
+- HTTPS connectivity from the Zabbix server or proxy to the Graylog REST API
+- Graylog service account with API token and required permissions
+
 ## Tested versions
 
-This template has been tested with:
-
-- Zabbix 7.4
-- Graylog 7.1.11
-
-## Configuration
-
-Import the template into Zabbix and link it to a host representing the Graylog environment.
-
-Configure the required macros as described below.
+| Component | Version |
+|---|---|
+| Zabbix | 7.4 |
+| Graylog | 7.1.11 |
+| Template | 1.6 |
 
 ## Setup
 
-### Graylog service account
+### 1. Create a Graylog service account
 
-1. Navigate to **System → Users and Teams → Users**.
-2. Create a service account, for example `zabbix-monitor`.
-3. Generate an API token for the account.
+Navigate to **System → Users and Teams → Users**.
 
-### Required roles
+Create a service account, such as `zabbix-monitor`, and generate an API token.
 
 Assign the following roles:
 
-| Role | Description |
+| Role | Purpose |
 |---|---|
-| Reader | Basic Graylog API access |
-| Sidecar Reader | Sidecar inventory and collector monitoring |
-| Zabbix Data Node Monitoring | Custom role for OpenSearch API access |
+| `Reader` | Basic Graylog API access |
+| `Sidecar Reader` | Sidecar inventory, heartbeat and collector health |
+| `Zabbix Data Node Monitoring` | Custom role for OpenSearch API proxy access |
 
-### Custom Data Node role
+### 2. Create the custom Data Node role
 
-Create a custom role through the Graylog REST API.
+Use an administrator account to create the required role through the Graylog REST API.
 
-**Endpoint:** `POST /api/roles`
-
-**Request body:**
-
-```json
-{
-  "name": "Zabbix Data Node Monitoring",
-  "description": "Read-only OpenSearch monitoring through the Graylog API",
-  "permissions": [
-    "datanode:opensearchproxy"
-  ],
-  "read_only": false
-}
-```
-
-
-### Create the Data Node Monitoring Role
-
-Run the following command using a Graylog administrator account.
+Replace `graylog.example.com` with your Graylog server address.
 
 ```bash
 curl -sS -i --max-time 15 \
@@ -92,56 +69,50 @@ curl -sS -i --max-time 15 \
   'https://graylog.example.com/api/roles'
 ```
 
-**Note:** Replace `graylog.example.com` with your Graylog server address. The command prompts for the administrator password.
-
-**Expected result:** `HTTP 201 Created`.
-
-
-Authenticate with a Graylog administrator account when creating the role.
+Expected response: `HTTP 201 Created`.
 
 Assign the new role to the monitoring service account.
 
-### Zabbix configuration
+### 3. Configure Zabbix
 
-1. Import the template.
-2. Create a host representing the Graylog platform.
+1. Import `Graylog-Platform-v1.6.yaml`.
+2. Create a host representing your Graylog environment.
 3. Link the **Graylog Platform by HTTP** template.
-4. Configure the macros.
-5. Verify data collection and discovery.
+4. Configure the required macros.
 
 ## Macros used
 
-| Name | Description | Default |
+| Macro | Description | Example |
 |---|---|---|
 | `{$GRAYLOG.API.URL}` | Graylog REST API base URL | `https://graylog.example.com/api` |
-| `{$GRAYLOG.API.TOKEN}` | Graylog service account API token | None |
-| `{$GRAYLOG.DATANODE.PROXY}` | Data Node hostname used for OpenSearch API proxy requests | `graylog-datanode.example.com` |
+| `{$GRAYLOG.API.TOKEN}` | Service account API token | Secret text |
+| `{$GRAYLOG.DATANODE.PROXY}` | Data Node hostname for the OpenSearch proxy | `graylog-datanode.example.com` |
 
-Store the API token as a Zabbix **Secret text** macro.
+The Data Node hostname must identify a Data Node known to Graylog.
 
-## Discovery
-
-The template automatically discovers:
-
-- Graylog application nodes
-- OpenSearch Data Nodes
-- Graylog input instances
-- Graylog Sidecars
+Store the API token as a **Secret text** macro.
 
 ## Dashboards
 
-- **Platform Overview** — Cluster health, throughput and overall status.
-- **Ingestion & Storage** — Message processing, index health and storage.
-- **Sidecar Diagnostics** — Sidecar availability, heartbeat age and collector failures.
+The template includes three dashboards:
+
+| Dashboard | Description |
+|---|---|
+| Platform Overview | Application health, message throughput, storage and Sidecar summary |
+| Ingestion & Storage | Message processing rates, index counts, storage and replica visibility |
+| Sidecar Diagnostics | HTML inventory with all discovered Sidecars, heartbeat ages, collector status and errors |
+
+The Sidecar table highlights offline and failing collectors, with problematic devices listed first.
 
 ## Notes
 
-- Monitoring is performed through a single Graylog API endpoint.
-- OpenSearch monitoring uses Graylog's Data Node API proxy.
-- Some OpenSearch API endpoints are restricted by Graylog.
-- Valid HTTPS certificate verification is recommended.
-- Operating-system, MongoDB and load-balancer monitoring require separate templates.
+- Monitoring uses the central Graylog API without requiring direct connections to individual nodes.
+- Data collection uses HTTP agent items, dependent items and low-level discovery.
+- OpenSearch proxy operations are subject to Graylog's security restrictions.
+- Raw ingestion volume in GB/day is not currently measured.
+- Operating-system, MongoDB and load-balancer monitoring require separate Zabbix templates.
+- Validate alert thresholds and notification behaviour for your environment.
 
 ## Feedback
 
-Please report issues or suggest improvements through GitHub Issues.
+Issues, suggestions and contributions are welcome through GitHub Issues.
