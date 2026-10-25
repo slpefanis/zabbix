@@ -1,1 +1,1505 @@
-
+zabbix_export:
+  version: '7.4'
+  template_groups:
+  - uuid: 147d70c5d37d4cf5a6904e5acddf3f1c
+    name: Templates/Applications
+  templates:
+  - uuid: d7272a8440d744b895533be1e7bf3d92
+    template: Graylog Platform by HTTP
+    name: Graylog Platform by HTTP
+    description: 'Single-host Graylog 7.1 API monitoring. Zabbix 7.4. Uses central HTTPS API with dedicated monitoring API token as
+      HTTP Basic username and literal token as password. Set {$GRAYLOG.API.URL} and {$GRAYLOG.DATANODE.PROXY} for your deployment, and
+      define {$GRAYLOG.API.TOKEN} as a secret macro on the monitored host. Do not import onto existing host without resolving conflicting
+      legacy items. All thresholds conservative; raw API failures surface as unsupported items (no silent zero fallback). Sidecar per-host
+      discovery is informational, aggregate failure alert only by default. All requests use Graylog API proxy, never direct OpenSearch.
+      OpenSearch _cat indexes have zero replicas on some message indices: informational exposure, no replication action performed.'
+    groups:
+    - name: Templates/Applications
+    tags:
+    - tag: component
+      value: graylog
+    macros:
+    - macro: '{$GRAYLOG.API.URL}'
+      value: https://graylog.example.com/api
+    - macro: '{$GRAYLOG.API.TOKEN}'
+      description: Define as secret host macro. Graylog monitoring service-account API token.
+    - macro: '{$GRAYLOG.DATANODE.PROXY}'
+      value: graylog-datanode.example.com
+      description: Data Node target for Graylog OpenSearch proxy; change to another active Data Node hostname if necessary.
+    - macro: '{$GRAYLOG.APP.NODES.MIN}'
+      value: '2'
+    - macro: '{$GRAYLOG.DATA.NODES.MIN}'
+      value: '3'
+    - macro: '{$GRAYLOG.SIDECAR.OFFLINE.WARN}'
+      value: '3'
+    - macro: '{$GRAYLOG.SIDECAR.FAIL.WARN}'
+      value: '3'
+    - macro: '{$GRAYLOG.HEAP.MAX}'
+      value: '85'
+    - macro: '{$GRAYLOG.DISK.MAX}'
+      value: '85'
+    items:
+    - uuid: 930c96d6522347be966ba68ebeb5f6ea
+      name: 'Graylog: cluster nodes raw'
+      type: HTTP_AGENT
+      key: graylog.cluster.raw
+      delay: 2m
+      history: 1d
+      value_type: TEXT
+      url: '{$GRAYLOG.API.URL}/cluster'
+      authtype: BASIC
+      username: '{$GRAYLOG.API.TOKEN}'
+      password: token
+      headers:
+      - name: X-Requested-By
+        value: Zabbix
+      - name: Accept
+        value: application/json
+      status_codes: '200'
+      timeout: 15s
+      verify_peer: 'YES'
+      verify_host: 'YES'
+      tags:
+      - tag: component
+        value: raw
+      triggers:
+      - uuid: 212f683b9f9b4bd69ef99c48e1859c51
+        expression: nodata(/Graylog Platform by HTTP/graylog.cluster.raw,10m)=1
+        name: 'Graylog: central API has stopped reporting'
+        priority: HIGH
+        tags:
+        - tag: component
+          value: graylog
+    - uuid: 0229a592967a4f4aae4277372b218f07
+      name: 'Graylog: input states raw'
+      type: HTTP_AGENT
+      key: graylog.inputs.raw
+      delay: 3m
+      history: 1d
+      value_type: TEXT
+      url: '{$GRAYLOG.API.URL}/cluster/inputstates'
+      authtype: BASIC
+      username: '{$GRAYLOG.API.TOKEN}'
+      password: token
+      headers:
+      - name: X-Requested-By
+        value: Zabbix
+      - name: Accept
+        value: application/json
+      status_codes: '200'
+      timeout: 15s
+      verify_peer: 'YES'
+      verify_host: 'YES'
+      tags:
+      - tag: component
+        value: raw
+    - uuid: 4c2bd53928c74461ac93a7239a53f116
+      name: 'Graylog: all Sidecars raw'
+      type: HTTP_AGENT
+      key: graylog.sidecars.raw
+      delay: 5m
+      history: 1d
+      value_type: TEXT
+      url: '{$GRAYLOG.API.URL}/sidecars?page=1&per_page=200&only_active=false'
+      authtype: BASIC
+      username: '{$GRAYLOG.API.TOKEN}'
+      password: token
+      headers:
+      - name: X-Requested-By
+        value: Zabbix
+      - name: Accept
+        value: application/json
+      status_codes: '200'
+      timeout: 15s
+      verify_peer: 'YES'
+      verify_host: 'YES'
+      tags:
+      - tag: component
+        value: raw
+    - uuid: ac3ffbd19b0349acbfc4487741d1a96f
+      name: 'OpenSearch: cluster health raw'
+      type: HTTP_AGENT
+      key: graylog.opensearch.health.raw
+      delay: 2m
+      history: 1d
+      value_type: TEXT
+      url: '{$GRAYLOG.API.URL}/datanodes/{$GRAYLOG.DATANODE.PROXY}/opensearch/_cluster/health'
+      authtype: BASIC
+      username: '{$GRAYLOG.API.TOKEN}'
+      password: token
+      headers:
+      - name: X-Requested-By
+        value: Zabbix
+      - name: Accept
+        value: application/json
+      status_codes: '200'
+      timeout: 15s
+      verify_peer: 'YES'
+      verify_host: 'YES'
+      tags:
+      - tag: component
+        value: raw
+    - uuid: 0d8b796fc4dc48d49ba7d59e217952d7
+      name: 'OpenSearch: Data Node stats raw'
+      type: HTTP_AGENT
+      key: graylog.opensearch.nodes.raw
+      delay: 3m
+      history: 1d
+      value_type: TEXT
+      url: '{$GRAYLOG.API.URL}/datanodes/{$GRAYLOG.DATANODE.PROXY}/opensearch/_cat/nodes?format=json&h=name,ip,heap.percent,ram.percent,cpu,load_1m,disk.used_percent,node.role,master'
+      authtype: BASIC
+      username: '{$GRAYLOG.API.TOKEN}'
+      password: token
+      headers:
+      - name: X-Requested-By
+        value: Zabbix
+      - name: Accept
+        value: application/json
+      status_codes: '200'
+      timeout: 15s
+      verify_peer: 'YES'
+      verify_host: 'YES'
+      tags:
+      - tag: component
+        value: raw
+    - uuid: b1ac50fc7a2a4cc6a9cfc9104cff0fd0
+      name: 'OpenSearch: indices raw'
+      type: HTTP_AGENT
+      key: graylog.opensearch.indices.raw
+      delay: 30m
+      history: 1d
+      value_type: TEXT
+      url: '{$GRAYLOG.API.URL}/datanodes/{$GRAYLOG.DATANODE.PROXY}/opensearch/_cat/indices?format=json&h=index,health,status,pri,rep,docs.count,store.size'
+      authtype: BASIC
+      username: '{$GRAYLOG.API.TOKEN}'
+      password: token
+      headers:
+      - name: X-Requested-By
+        value: Zabbix
+      - name: Accept
+        value: application/json
+      status_codes: '200'
+      timeout: 15s
+      verify_peer: 'YES'
+      verify_host: 'YES'
+      tags:
+      - tag: component
+        value: raw
+    - uuid: c1f171f237ec43f69ae5bcdeb1269d4c
+      name: 'Graylog: throughput per node raw'
+      type: HTTP_AGENT
+      key: graylog.throughput.raw
+      delay: 2m
+      history: 1d
+      value_type: TEXT
+      url: '{$GRAYLOG.API.URL}/cluster/metrics/multiple'
+      authtype: BASIC
+      username: '{$GRAYLOG.API.TOKEN}'
+      password: token
+      headers:
+      - name: X-Requested-By
+        value: Zabbix
+      - name: Accept
+        value: application/json
+      - name: Content-Type
+        value: application/json
+      status_codes: '200'
+      timeout: 15s
+      verify_peer: 'YES'
+      verify_host: 'YES'
+      tags:
+      - tag: component
+        value: raw
+      request_method: POST
+      post_type: JSON
+      posts: '{"metrics":["org.graylog2.throughput.input.1-sec-rate","org.graylog2.throughput.output.1-sec-rate"]}'
+    - uuid: 1b45b1e25b4740d68eb358d9845d3369
+      name: 'Graylog: application nodes seen'
+      type: DEPENDENT
+      key: graylog.cluster.count
+      value_type: UNSIGNED
+      history: 30d
+      master_item:
+        key: graylog.cluster.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);return Object.keys(j).length;
+      tags:
+      - tag: component
+        value: metric
+      triggers:
+      - uuid: 1a45f2ba3ec24d4182d152600b9867dc
+        expression: max(/Graylog Platform by HTTP/graylog.cluster.count,10m)<{$GRAYLOG.APP.NODES.MIN}
+        name: 'Graylog: application node count below expected'
+        priority: HIGH
+        tags:
+        - tag: component
+          value: graylog
+    - uuid: aaf119b42a7a440f99ce39287cb8a8af
+      name: 'Graylog: healthy application nodes'
+      type: DEPENDENT
+      key: graylog.cluster.healthy
+      value_type: UNSIGNED
+      history: 30d
+      master_item:
+        key: graylog.cluster.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);return Object.keys(j).filter(function(k){var n=j[k];return n.lifecycle==="running"&&n.lb_status==="alive"&&n.is_processing===true;}).length;
+      tags:
+      - tag: component
+        value: metric
+    - uuid: e613449ca82f40bd9a523b91e64329dc
+      name: 'OpenSearch: cluster status'
+      type: DEPENDENT
+      key: graylog.os.status
+      value_type: CHAR
+      history: 30d
+      master_item:
+        key: graylog.opensearch.health.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);var v=j.status; if(v===undefined||v===null) throw "Missing field"; return v;
+      tags:
+      - tag: component
+        value: metric
+      triggers:
+      - uuid: 53ec389a3d7741b3a45945977a0cd3a8
+        expression: count(/Graylog Platform by HTTP/graylog.os.status,#3,"eq","red")>=3
+        name: 'OpenSearch: cluster RED'
+        priority: HIGH
+        tags:
+        - tag: component
+          value: graylog
+    - uuid: afa089d7ccc5443c969ca31ca9bab029
+      name: 'OpenSearch: Data Nodes online'
+      type: DEPENDENT
+      key: graylog.os.nodes
+      value_type: UNSIGNED
+      history: 30d
+      master_item:
+        key: graylog.opensearch.health.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);var v=j.number_of_data_nodes; if(v===undefined||v===null) throw "Missing field"; return v;
+      tags:
+      - tag: component
+        value: metric
+      triggers:
+      - uuid: 3ffc35ec80e642e281f97580ddad2756
+        expression: max(/Graylog Platform by HTTP/graylog.os.nodes,10m)<{$GRAYLOG.DATA.NODES.MIN}
+        name: 'OpenSearch: fewer than expected Data Nodes'
+        priority: HIGH
+        tags:
+        - tag: component
+          value: graylog
+    - uuid: 75491f7757be4bc9b89d0bca9daacaba
+      name: 'OpenSearch: unassigned shards'
+      type: DEPENDENT
+      key: graylog.os.unassigned
+      value_type: UNSIGNED
+      history: 30d
+      master_item:
+        key: graylog.opensearch.health.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);var v=j.unassigned_shards; if(v===undefined||v===null) throw "Missing field"; return v;
+      tags:
+      - tag: component
+        value: metric
+      triggers:
+      - uuid: 18307a04348c487dbf6e3763148f7356
+        expression: min(/Graylog Platform by HTTP/graylog.os.unassigned,15m)>0
+        name: 'OpenSearch: unassigned shards sustained'
+        priority: AVERAGE
+        tags:
+        - tag: component
+          value: graylog
+    - uuid: 9a4dee767cb44f24870534667fbd34bd
+      name: 'OpenSearch: pending tasks'
+      type: DEPENDENT
+      key: graylog.os.pending
+      value_type: UNSIGNED
+      history: 30d
+      master_item:
+        key: graylog.opensearch.health.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);var v=j.number_of_pending_tasks; if(v===undefined||v===null) throw "Missing field"; return v;
+      tags:
+      - tag: component
+        value: metric
+      triggers:
+      - uuid: 1ad4f1f97cb74c49894402868907a240
+        expression: min(/Graylog Platform by HTTP/graylog.os.pending,15m)>25
+        name: 'OpenSearch: pending tasks sustained'
+        priority: WARNING
+        tags:
+        - tag: component
+          value: graylog
+    - uuid: b172f850c4ae4779887fe3f06a03fad2
+      name: 'OpenSearch: active shards percent'
+      type: DEPENDENT
+      key: graylog.os.activepct
+      value_type: FLOAT
+      history: 30d
+      master_item:
+        key: graylog.opensearch.health.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);var v=j.active_shards_percent_as_number; if(v===undefined||v===null) throw "Missing field"; return
+          v;
+      tags:
+      - tag: component
+        value: metric
+      units: '%'
+    - uuid: 81831c716bb94a2ba01564b712fd7f2a
+      name: 'Sidecars: registered'
+      type: DEPENDENT
+      key: graylog.sidecars.total
+      value_type: UNSIGNED
+      history: 30d
+      master_item:
+        key: graylog.sidecars.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);if(j.sidecars.length!==j.total) throw "Sidecar pagination incomplete";return j.total;
+      tags:
+      - tag: component
+        value: metric
+    - uuid: 5ed35bf4cb2e49498d51c5ce4e75e916
+      name: 'Sidecars: active'
+      type: DEPENDENT
+      key: graylog.sidecars.active
+      value_type: UNSIGNED
+      history: 30d
+      master_item:
+        key: graylog.sidecars.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);if(j.sidecars.length!==j.total) throw "Sidecar pagination incomplete";return j.sidecars.filter(function(s){return
+          s.active===true}).length;
+      tags:
+      - tag: component
+        value: metric
+    - uuid: 4d5f23bdfa3e454b8d94a893ddb78364
+      name: 'Sidecars: offline'
+      type: DEPENDENT
+      key: graylog.sidecars.offline
+      value_type: UNSIGNED
+      history: 30d
+      master_item:
+        key: graylog.sidecars.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);if(j.sidecars.length!==j.total) throw "Sidecar pagination incomplete";return j.sidecars.filter(function(s){return
+          s.active===false}).length;
+      tags:
+      - tag: component
+        value: metric
+      triggers:
+      - uuid: 22a80241f01f4074b864493eddb78d7c
+        expression: min(/Graylog Platform by HTTP/graylog.sidecars.offline,15m)>={$GRAYLOG.SIDECAR.OFFLINE.WARN}
+        name: 'Graylog: multiple Sidecars offline'
+        priority: WARNING
+        tags:
+        - tag: component
+          value: graylog
+    - uuid: ef469eb182914923a33bf64305112456
+      name: 'Sidecars: collectors failing (hosts)'
+      type: DEPENDENT
+      key: graylog.sidecars.failing
+      value_type: UNSIGNED
+      history: 30d
+      master_item:
+        key: graylog.sidecars.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);if(j.sidecars.length!==j.total) throw "Sidecar pagination incomplete";return j.sidecars.filter(function(s){return
+          (s.node_details&&s.node_details.status&&s.node_details.status.collectors||[]).some(function(c){return c.status===2;});}).length;
+      tags:
+      - tag: component
+        value: metric
+      triggers:
+      - uuid: 6fa84884ec8b466e80fd1ee632fe5009
+        expression: min(/Graylog Platform by HTTP/graylog.sidecars.failing,15m)>={$GRAYLOG.SIDECAR.FAIL.WARN}
+        name: 'Graylog: multiple Sidecar collectors failing'
+        priority: WARNING
+        tags:
+        - tag: component
+          value: graylog
+    - uuid: 4bd5162baf864a67bbd4a36d08078d34
+      name: 'Sidecars: collectors stopped (hosts)'
+      type: DEPENDENT
+      key: graylog.sidecars.stopped
+      value_type: UNSIGNED
+      history: 30d
+      master_item:
+        key: graylog.sidecars.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);if(j.sidecars.length!==j.total) throw "Sidecar pagination incomplete";return j.sidecars.filter(function(s){return
+          (s.node_details&&s.node_details.status&&s.node_details.status.collectors||[]).some(function(c){return c.status===1;});}).length;
+      tags:
+      - tag: component
+        value: metric
+    - uuid: c12a9e875e554ee1bfadc55e2eccd0f7
+      name: 'OpenSearch: total indices'
+      type: DEPENDENT
+      key: graylog.indices.count
+      value_type: UNSIGNED
+      history: 30d
+      master_item:
+        key: graylog.opensearch.indices.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);return j.length;
+      tags:
+      - tag: component
+        value: metric
+    - uuid: a69c75ebf05144e7b11eeb2c71e9f308
+      name: 'OpenSearch: indices not green'
+      type: DEPENDENT
+      key: graylog.indices.notgreen
+      value_type: UNSIGNED
+      history: 30d
+      master_item:
+        key: graylog.opensearch.indices.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);return j.filter(function(x){return x.health!=="green";}).length;
+      tags:
+      - tag: component
+        value: metric
+      triggers:
+      - uuid: 10dd6a1a48cd4fc8886a1c01f22433a5
+        expression: min(/Graylog Platform by HTTP/graylog.indices.notgreen,30m)>0
+        name: 'OpenSearch: non-green indices for 30 minutes'
+        priority: WARNING
+        tags:
+        - tag: component
+          value: graylog
+    - uuid: f03fb1c326264394baf5cec24d335c59
+      name: 'OpenSearch: message indices'
+      type: DEPENDENT
+      key: graylog.indices.message.count
+      value_type: UNSIGNED
+      history: 30d
+      master_item:
+        key: graylog.opensearch.indices.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);return j.filter(function(x){return /^graylog_/.test(x.index);}).length;
+      tags:
+      - tag: component
+        value: metric
+    - uuid: 8f667148d73045c6b90016c5eba7fe10
+      name: 'OpenSearch: message indices without replicas'
+      type: DEPENDENT
+      key: graylog.indices.message.noreplica
+      value_type: UNSIGNED
+      history: 30d
+      master_item:
+        key: graylog.opensearch.indices.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);return j.filter(function(x){return /^graylog_/.test(x.index)&&Number(x.rep)===0;}).length;
+      tags:
+      - tag: component
+        value: metric
+    - uuid: 340676abccca42d287ea6003f7f135b1
+      name: 'Graylog: cluster incoming messages per second'
+      type: DEPENDENT
+      key: graylog.throughput.cluster.input
+      value_type: FLOAT
+      history: 30d
+      master_item:
+        key: graylog.throughput.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);var keys=Object.keys(j);if(!keys.length)throw "No nodes";var sum=0;keys.forEach(function(k){var a=j[k].metrics.filter(function(m){return
+          m.full_name==="org.graylog2.throughput.input.1-sec-rate";});if(a.length!==1||typeof a[0].metric.value!=="number")throw "Missing
+          input rate for "+k;sum+=a[0].metric.value;});return sum;
+      tags:
+      - tag: component
+        value: metric
+      units: msg/s
+    - uuid: d98e45dc6df941af9a3e4e92b0f0457f
+      name: 'Graylog: cluster outgoing messages per second'
+      type: DEPENDENT
+      key: graylog.throughput.cluster.output
+      value_type: FLOAT
+      history: 30d
+      master_item:
+        key: graylog.throughput.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);var keys=Object.keys(j);if(!keys.length)throw "No nodes";var sum=0;keys.forEach(function(k){var a=j[k].metrics.filter(function(m){return
+          m.full_name==="org.graylog2.throughput.output.1-sec-rate";});if(a.length!==1||typeof a[0].metric.value!=="number")throw "Missing
+          output rate for "+k;sum+=a[0].metric.value;});return sum;
+      tags:
+      - tag: component
+        value: metric
+      units: msg/s
+    - uuid: 4fb62ce9bea04bf5a26acadfff8318bb
+      name: 'OpenSearch: Graylog message indices storage'
+      type: DEPENDENT
+      key: graylog.indices.message.bytes
+      value_type: UNSIGNED
+      history: 30d
+      master_item:
+        key: graylog.opensearch.indices.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var a=JSON.parse(value);var units={b:1,kb:1024,mb:1048576,gb:1073741824,tb:1099511627776,pb:1125899906842624};var sum=0;a.forEach(function(x){if(!/^graylog_/.test(x.index))return;var
+          m=String(x["store.size"]).toLowerCase().match(/^([0-9.]+)(b|kb|mb|gb|tb|pb)$/);if(!m)throw "Unrecognised size for "+x.index;sum+=Number(m[1])*units[m[2]];});return
+          Math.round(sum);
+      tags:
+      - tag: component
+        value: metric
+      units: B
+    discovery_rules:
+    - uuid: cf9925e13a174e3eb6baf86085fca608
+      name: Graylog application nodes discovery
+      type: DEPENDENT
+      key: graylog.apps.discovery
+      master_item:
+        key: graylog.cluster.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);return JSON.stringify(Object.keys(j).map(function(k){return {"{#NODEID}":k,"{#NODENAME}":j[k].hostname};}));
+      lifetime_type: DELETE_AFTER
+      lifetime: 30d
+      enabled_lifetime_type: DISABLE_AFTER
+      enabled_lifetime: 7d
+      item_prototypes:
+      - uuid: 9d6c0a536bcc4822bc3969899ad60e46
+        name: 'Graylog {#NODENAME}: Lifecycle'
+        type: DEPENDENT
+        key: graylog.app.lifecycle[{#NODEID}]
+        value_type: CHAR
+        history: 30d
+        master_item:
+          key: graylog.cluster.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var n=j["{#NODEID}"];if(!n)throw "Node missing";return n.lifecycle;
+        tags:
+        - tag: component
+          value: metric
+      - uuid: a4d32901ba644255a06bf7f1e7c6ca31
+        name: 'Graylog {#NODENAME}: Load-balancer status'
+        type: DEPENDENT
+        key: graylog.app.lb[{#NODEID}]
+        value_type: CHAR
+        history: 30d
+        master_item:
+          key: graylog.cluster.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var n=j["{#NODEID}"];if(!n)throw "Node missing";return n.lb_status;
+        tags:
+        - tag: component
+          value: metric
+      - uuid: da6f38ea582542a2abddfcfaad810fe0
+        name: 'Graylog {#NODENAME}: Processing enabled'
+        type: DEPENDENT
+        key: graylog.app.processing[{#NODEID}]
+        value_type: UNSIGNED
+        history: 30d
+        master_item:
+          key: graylog.cluster.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var n=j["{#NODEID}"];if(!n)throw "Node missing";return n.is_processing?1:0;
+        tags:
+        - tag: component
+          value: metric
+      - uuid: 99e0751fac904166a5ba3d70a7b7b8e3
+        name: 'Graylog {#NODENAME}: journal raw'
+        type: HTTP_AGENT
+        key: graylog.app.journal.raw[{#NODEID}]
+        delay: 3m
+        history: 1d
+        value_type: TEXT
+        url: '{$GRAYLOG.API.URL}/cluster/{#NODEID}/journal'
+        authtype: BASIC
+        username: '{$GRAYLOG.API.TOKEN}'
+        password: token
+        headers:
+        - name: X-Requested-By
+          value: Zabbix
+        status_codes: '200'
+        timeout: 15s
+        verify_peer: 'YES'
+        verify_host: 'YES'
+        tags:
+        - tag: component
+          value: raw
+      - uuid: 404970da0eba489b92519320877c5a11
+        name: 'Graylog {#NODENAME}: Journal size'
+        type: DEPENDENT
+        key: graylog.app.journal.size[{#NODEID}]
+        value_type: UNSIGNED
+        history: 30d
+        master_item:
+          key: graylog.app.journal.raw[{#NODEID}]
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var v=j.journal_size; if(v===undefined||v===null) throw "Missing field"; return v;
+        tags:
+        - tag: component
+          value: metric
+        units: B
+      - uuid: ea04cf130a6b49409068001fa02fd3f9
+        name: 'Graylog {#NODENAME}: Journal maximum size'
+        type: DEPENDENT
+        key: graylog.app.journal.limit[{#NODEID}]
+        value_type: UNSIGNED
+        history: 30d
+        master_item:
+          key: graylog.app.journal.raw[{#NODEID}]
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var v=j.journal_size_limit; if(v===undefined||v===null) throw "Missing field"; return v;
+        tags:
+        - tag: component
+          value: metric
+        units: B
+      - uuid: d7f76bd0a508491599b2b9eb838ed5bf
+        name: 'Graylog {#NODENAME}: Uncommitted journal entries'
+        type: DEPENDENT
+        key: graylog.app.journal.backlog[{#NODEID}]
+        value_type: UNSIGNED
+        history: 30d
+        master_item:
+          key: graylog.app.journal.raw[{#NODEID}]
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var v=j.uncommitted_journal_entries; if(v===undefined||v===null) throw "Missing field"; return v;
+        tags:
+        - tag: component
+          value: metric
+      - uuid: 546f161e0e1946f893fd4c753c68e826
+        name: 'Graylog {#NODENAME}: Journal usage %'
+        type: DEPENDENT
+        key: graylog.app.journal.usagepct[{#NODEID}]
+        value_type: FLOAT
+        history: 30d
+        master_item:
+          key: graylog.app.journal.raw[{#NODEID}]
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);if(!j.journal_size_limit)throw "Journal limit unavailable";return j.journal_size*100/j.journal_size_limit;
+        tags:
+        - tag: component
+          value: metric
+        units: '%'
+      - uuid: 20da68ff0e9140e1948d21d2efedec9f
+        name: 'Graylog {#NODENAME}: input msg/s'
+        type: DEPENDENT
+        key: graylog.app.throughput.input[{#NODEID}]
+        value_type: FLOAT
+        history: 30d
+        master_item:
+          key: graylog.throughput.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var n=j["{#NODEID}"];if(!n)throw "Node absent";var a=n.metrics.filter(function(x){return x.full_name==="org.graylog2.throughput.input.1-sec-rate";});if(a.length!==1)throw
+            "Metric absent";return a[0].metric.value;
+        tags:
+        - tag: component
+          value: metric
+        units: msg/s
+      - uuid: 42ec50d2d5224ef3a99a84b3b3a562e2
+        name: 'Graylog {#NODENAME}: output msg/s'
+        type: DEPENDENT
+        key: graylog.app.throughput.output[{#NODEID}]
+        value_type: FLOAT
+        history: 30d
+        master_item:
+          key: graylog.throughput.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var n=j["{#NODEID}"];if(!n)throw "Node absent";var a=n.metrics.filter(function(x){return x.full_name==="org.graylog2.throughput.output.1-sec-rate";});if(a.length!==1)throw
+            "Metric absent";return a[0].metric.value;
+        tags:
+        - tag: component
+          value: metric
+        units: msg/s
+      trigger_prototypes:
+      - uuid: 4526f4506ab441859dd12e3623cec5f7
+        expression: last(/Graylog Platform by HTTP/graylog.app.lifecycle[{#NODEID}])<>"running"
+        name: 'Graylog {#NODENAME}: Lifecycle degraded'
+        priority: AVERAGE
+        tags:
+        - tag: component
+          value: graylog
+      - uuid: e52fd3bf3aee4f518f1fd5f9067f28e8
+        expression: last(/Graylog Platform by HTTP/graylog.app.lb[{#NODEID}])<>"alive"
+        name: 'Graylog {#NODENAME}: Load-balancer status degraded'
+        priority: AVERAGE
+        tags:
+        - tag: component
+          value: graylog
+      - uuid: b4a5879fcf5a4d119742ecaa4d1fbdc3
+        expression: max(/Graylog Platform by HTTP/graylog.app.processing[{#NODEID}],10m)=0
+        name: 'Graylog {#NODENAME}: Processing enabled degraded'
+        priority: AVERAGE
+        tags:
+        - tag: component
+          value: graylog
+      - uuid: 3227ca8a1f0c43aca99abc4338bf0f04
+        expression: min(/Graylog Platform by HTTP/graylog.app.journal.usagepct[{#NODEID}],15m)>85
+        name: 'Graylog {#NODENAME}: journal above 85%'
+        priority: AVERAGE
+        tags:
+        - tag: component
+          value: graylog
+    - uuid: b4a22b1cb22b4cf986b1e635da2ed1a0
+      name: OpenSearch Data Nodes discovery
+      type: DEPENDENT
+      key: graylog.datanodes.discovery
+      master_item:
+        key: graylog.opensearch.nodes.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);return JSON.stringify(j.map(function(n){return {"{#DNNAME}":n.name};}));
+      lifetime_type: DELETE_AFTER
+      lifetime: 30d
+      enabled_lifetime_type: DISABLE_AFTER
+      enabled_lifetime: 7d
+      item_prototypes:
+      - uuid: 9ab18b7e7104497dbfe7e5c2316e8242
+        name: 'OpenSearch {#DNNAME}: JVM heap used'
+        type: DEPENDENT
+        key: graylog.datanode.heap_percent[{#DNNAME}]
+        value_type: FLOAT
+        history: 30d
+        master_item:
+          key: graylog.opensearch.nodes.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data Node missing";var
+            x=a[0]["heap.percent"];if(x===undefined||x===null||x==="")throw "Metric missing";return Number(x);
+        tags:
+        - tag: component
+          value: metric
+        units: '%'
+      - uuid: e5aa5d609ddf407ba9e2cca73fac437b
+        name: 'OpenSearch {#DNNAME}: RAM used'
+        type: DEPENDENT
+        key: graylog.datanode.ram_percent[{#DNNAME}]
+        value_type: FLOAT
+        history: 30d
+        master_item:
+          key: graylog.opensearch.nodes.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data Node missing";var
+            x=a[0]["ram.percent"];if(x===undefined||x===null||x==="")throw "Metric missing";return Number(x);
+        tags:
+        - tag: component
+          value: metric
+        units: '%'
+      - uuid: 5bbeb9edd0dd480fb3ef6a6c4869e77a
+        name: 'OpenSearch {#DNNAME}: CPU load'
+        type: DEPENDENT
+        key: graylog.datanode.cpu[{#DNNAME}]
+        value_type: FLOAT
+        history: 30d
+        master_item:
+          key: graylog.opensearch.nodes.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data Node missing";var
+            x=a[0]["cpu"];if(x===undefined||x===null||x==="")throw "Metric missing";return Number(x);
+        tags:
+        - tag: component
+          value: metric
+        units: '%'
+      - uuid: a489c91fcb134898b482f50ffba41008
+        name: 'OpenSearch {#DNNAME}: 1-minute load'
+        type: DEPENDENT
+        key: graylog.datanode.load_1m[{#DNNAME}]
+        value_type: FLOAT
+        history: 30d
+        master_item:
+          key: graylog.opensearch.nodes.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data Node missing";var
+            x=a[0]["load_1m"];if(x===undefined||x===null||x==="")throw "Metric missing";return Number(x);
+        tags:
+        - tag: component
+          value: metric
+      - uuid: a8abbf44c1d64c2e9a5e257174476585
+        name: 'OpenSearch {#DNNAME}: OpenSearch disk used'
+        type: DEPENDENT
+        key: graylog.datanode.disk_used_percent[{#DNNAME}]
+        value_type: FLOAT
+        history: 30d
+        master_item:
+          key: graylog.opensearch.nodes.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data Node missing";var
+            x=a[0]["disk.used_percent"];if(x===undefined||x===null||x==="")throw "Metric missing";return Number(x);
+        tags:
+        - tag: component
+          value: metric
+        units: '%'
+      trigger_prototypes:
+      - uuid: 5b7e09449902421cb6777fde83f13eb9
+        expression: min(/Graylog Platform by HTTP/graylog.datanode.heap_percent[{#DNNAME}],20m)>{$GRAYLOG.HEAP.MAX}
+        name: 'OpenSearch {#DNNAME}: JVM heap used sustained high'
+        priority: WARNING
+        tags:
+        - tag: component
+          value: graylog
+      - uuid: 27ed4aff49084bd4bf951cae646cf18a
+        expression: min(/Graylog Platform by HTTP/graylog.datanode.disk_used_percent[{#DNNAME}],20m)>{$GRAYLOG.DISK.MAX}
+        name: 'OpenSearch {#DNNAME}: OpenSearch disk used sustained high'
+        priority: WARNING
+        tags:
+        - tag: component
+          value: graylog
+    - uuid: d27f5dea0a7a4cda8a10f29e9e97d057
+      name: Graylog input instances discovery
+      type: DEPENDENT
+      key: graylog.inputs.discovery
+      master_item:
+        key: graylog.inputs.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);var a=[];Object.keys(j).forEach(function(node){j[node].forEach(function(i){a.push({"{#NODEID}":node,"{#INPUTID}":i.id,"{#INPUTNAME}":i.message_input.title});});});return
+          JSON.stringify(a);
+      lifetime_type: DELETE_AFTER
+      lifetime: 30d
+      enabled_lifetime_type: DISABLE_AFTER
+      enabled_lifetime: 7d
+      item_prototypes:
+      - uuid: d3335077a6194955b4c496ca13f2af17
+        name: 'Graylog input {#INPUTNAME} on {#NODEID}: running'
+        type: DEPENDENT
+        key: graylog.input.running[{#NODEID},{#INPUTID}]
+        value_type: UNSIGNED
+        history: 30d
+        master_item:
+          key: graylog.inputs.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var a=j["{#NODEID}"];if(!a)throw "Node input list absent";var b=a.filter(function(x){return x.id==="{#INPUTID}";});if(b.length!==1)throw
+            "Input missing";return b[0].state==="RUNNING"?1:0;
+        tags:
+        - tag: component
+          value: metric
+      trigger_prototypes:
+      - uuid: f784a2f268a74606a545a7fda3685fef
+        expression: max(/Graylog Platform by HTTP/graylog.input.running[{#NODEID},{#INPUTID}],10m)=0
+        name: 'Graylog input {#INPUTNAME} on {#NODEID}: stopped'
+        priority: AVERAGE
+        tags:
+        - tag: component
+          value: graylog
+    - uuid: 8903ab8e8f164b92acac8de373710a2c
+      name: Graylog Sidecars discovery
+      type: DEPENDENT
+      key: graylog.sidecars.discovery
+      master_item:
+        key: graylog.sidecars.raw
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - var j=JSON.parse(value);if(j.sidecars.length!==j.total)throw "Incomplete Sidecar pages";return JSON.stringify(j.sidecars.map(function(s){return
+          {"{#SCID}":s.node_id,"{#SCNAME}":s.node_name};}));
+      lifetime_type: DELETE_AFTER
+      lifetime: 30d
+      enabled_lifetime_type: DISABLE_AFTER
+      enabled_lifetime: 7d
+      item_prototypes:
+      - uuid: 9c87b758261e4d60afd91779f57a1152
+        name: 'Sidecar {#SCNAME}: active'
+        type: DEPENDENT
+        key: graylog.sidecar.active[{#SCID}]
+        value_type: UNSIGNED
+        history: 30d
+        master_item:
+          key: graylog.sidecars.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw "Sidecar
+            missing";var s=a[0];return s.active?1:0;
+        tags:
+        - tag: component
+          value: metric
+      - uuid: ee9273dc46c842f9b5e6a9fb6d490840
+        name: 'Sidecar {#SCNAME}: heartbeat age'
+        type: DEPENDENT
+        key: graylog.sidecar.heartbeat.age[{#SCID}]
+        value_type: FLOAT
+        history: 30d
+        master_item:
+          key: graylog.sidecars.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw "Sidecar
+            missing";var s=a[0];if(!s.last_seen)throw "No heartbeat";return Math.max(0,(Date.now()-Date.parse(s.last_seen))/60000);
+        tags:
+        - tag: component
+          value: metric
+        units: m
+      - uuid: 6b3339091b1c48ac8165b22c8898cedb
+        name: 'Sidecar {#SCNAME}: failing collectors'
+        type: DEPENDENT
+        key: graylog.sidecar.failures[{#SCID}]
+        value_type: UNSIGNED
+        history: 30d
+        master_item:
+          key: graylog.sidecars.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw "Sidecar
+            missing";var s=a[0];return (s.node_details&&s.node_details.status&&s.node_details.status.collectors||[]).filter(function(c){return
+            c.status===2;}).length;
+        tags:
+        - tag: component
+          value: metric
+      - uuid: 56447915934046c3972025acd93bb934
+        name: 'Sidecar {#SCNAME}: Sidecar version'
+        type: DEPENDENT
+        key: graylog.sidecar.version[{#SCID}]
+        value_type: CHAR
+        history: 30d
+        master_item:
+          key: graylog.sidecars.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw "Sidecar
+            missing";var s=a[0];if(!s.sidecar_version)throw "Version missing";return s.sidecar_version;
+        tags:
+        - tag: component
+          value: metric
+      - uuid: 8aa18faeddb54b71bd231a10d02e6c67
+        name: 'Sidecar {#SCNAME}: collector detail'
+        type: DEPENDENT
+        key: graylog.sidecar.collector.detail[{#SCID}]
+        value_type: CHAR
+        history: 30d
+        master_item:
+          key: graylog.sidecars.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw "Sidecar
+            missing";var s=a[0];var st=s.node_details&&s.node_details.status||{};var bad=(st.collectors||[]).filter(function(c){return
+            c.status!==0;}).map(function(c){return c.message||"Collector not running";});return (bad.length?bad.join(" | "):(st.message||"Unknown")).substring(0,250);
+        tags:
+        - tag: component
+          value: metric
+    dashboards:
+    - uuid: 8f4cc5cead634834a45cb60b589694a2
+      name: Graylog | Operations
+      pages:
+      - name: Platform overview
+        widgets:
+        - type: item
+          name: Application nodes
+          x: '0'
+          y: '0'
+          width: '18'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.cluster.count
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
+        - type: item
+          name: Input messages/sec
+          x: '18'
+          y: '0'
+          width: '18'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.throughput.cluster.input
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
+        - type: item
+          name: Output messages/sec
+          x: '36'
+          y: '0'
+          width: '18'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.throughput.cluster.output
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
+        - type: item
+          name: Message storage
+          x: '54'
+          y: '0'
+          width: '18'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.indices.message.bytes
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
+        - type: item
+          name: Registered Sidecars
+          x: '0'
+          y: '4'
+          width: '18'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.sidecars.total
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
+        - type: item
+          name: Active Sidecars
+          x: '18'
+          y: '4'
+          width: '18'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.sidecars.active
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
+        - type: item
+          name: Offline Sidecars
+          x: '36'
+          y: '4'
+          width: '18'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.sidecars.offline
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
+        - type: item
+          name: Failing collectors
+          x: '54'
+          y: '4'
+          width: '18'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.sidecars.failing
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
+        - type: problems
+          name: Graylog platform problems
+          x: '0'
+          y: '9'
+          width: '72'
+          height: '7'
+      - name: Ingestion and storage
+        widgets:
+        - type: item
+          name: Incoming rate
+          x: '0'
+          y: '0'
+          width: '24'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.throughput.cluster.input
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
+        - type: item
+          name: Outgoing rate
+          x: '24'
+          y: '0'
+          width: '24'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.throughput.cluster.output
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
+        - type: item
+          name: Message index storage
+          x: '48'
+          y: '0'
+          width: '24'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.indices.message.bytes
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
+        - type: item
+          name: Message indices
+          x: '0'
+          y: '5'
+          width: '24'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.indices.message.count
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
+        - type: item
+          name: Indices not green
+          x: '24'
+          y: '5'
+          width: '24'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.indices.notgreen
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
+        - type: item
+          name: Indices without replicas
+          x: '48'
+          y: '5'
+          width: '24'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.indices.message.noreplica
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
+      - name: Sidecar diagnostics
+        widgets:
+        - type: item
+          name: Registered Sidecars
+          x: '0'
+          y: '0'
+          width: '18'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.sidecars.total
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
+        - type: item
+          name: Active Sidecars
+          x: '18'
+          y: '0'
+          width: '18'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.sidecars.active
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
+        - type: item
+          name: Offline Sidecars
+          x: '36'
+          y: '0'
+          width: '18'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.sidecars.offline
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
+        - type: item
+          name: Failing collector hosts
+          x: '54'
+          y: '0'
+          width: '18'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.sidecars.failing
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
+        - type: topitems
+          name: Collector failures — highest first
+          x: '0'
+          y: '5'
+          width: '36'
+          height: '13'
+          fields:
+          - type: STRING
+            name: columns.0.items.0
+            value: 'Sidecar *: failing collectors'
+          - type: INTEGER
+            name: columns.0.decimal_places
+            value: '0'
+          - type: INTEGER
+            name: item_ordering_order_by
+            value: '3'
+          - type: INTEGER
+            name: item_ordering_order
+            value: '2'
+          - type: INTEGER
+            name: item_ordering_limit
+            value: '40'
+          - type: INTEGER
+            name: layout
+            value: '1'
+          - type: INTEGER
+            name: show_problems
+            value: '0'
+          - type: STRING
+            name: columns.0.thresholds.0.color
+            value: E53935
+          - type: STRING
+            name: columns.0.thresholds.0.threshold
+            value: '1'
+        - type: topitems
+          name: Heartbeat age — oldest first
+          x: '36'
+          y: '5'
+          width: '36'
+          height: '13'
+          fields:
+          - type: STRING
+            name: columns.0.items.0
+            value: 'Sidecar *: heartbeat age'
+          - type: INTEGER
+            name: columns.0.decimal_places
+            value: '0'
+          - type: INTEGER
+            name: item_ordering_order_by
+            value: '3'
+          - type: INTEGER
+            name: item_ordering_order
+            value: '2'
+          - type: INTEGER
+            name: item_ordering_limit
+            value: '40'
+          - type: INTEGER
+            name: layout
+            value: '1'
+          - type: INTEGER
+            name: show_problems
+            value: '0'
+          - type: STRING
+            name: columns.0.thresholds.0.color
+            value: E53935
+          - type: STRING
+            name: columns.0.thresholds.0.threshold
+            value: '5'
+        - type: topitems
+          name: All Sidecars — collector health
+          x: '0'
+          y: '19'
+          width: '36'
+          height: '15'
+          fields:
+          - type: STRING
+            name: columns.0.items.0
+            value: 'Sidecar *: failing collectors'
+          - type: INTEGER
+            name: columns.0.decimal_places
+            value: '0'
+          - type: INTEGER
+            name: item_ordering_order_by
+            value: '3'
+          - type: INTEGER
+            name: item_ordering_order
+            value: '2'
+          - type: INTEGER
+            name: item_ordering_limit
+            value: '100'
+          - type: INTEGER
+            name: layout
+            value: '1'
+          - type: INTEGER
+            name: show_problems
+            value: '0'
+          - type: STRING
+            name: columns.0.thresholds.0.color
+            value: E53935
+          - type: STRING
+            name: columns.0.thresholds.0.threshold
+            value: '1'
+        - type: topitems
+          name: Sidecar versions
+          x: '36'
+          y: '19'
+          width: '36'
+          height: '15'
+          fields:
+          - type: STRING
+            name: columns.0.items.0
+            value: 'Sidecar *: Sidecar version'
+          - type: INTEGER
+            name: columns.0.decimal_places
+            value: '0'
+          - type: INTEGER
+            name: item_ordering_order_by
+            value: '3'
+          - type: INTEGER
+            name: item_ordering_order
+            value: '3'
+          - type: INTEGER
+            name: item_ordering_limit
+            value: '100'
+          - type: INTEGER
+            name: layout
+            value: '1'
+          - type: INTEGER
+            name: show_problems
+            value: '0'
+          - type: STRING
+            name: columns.0.thresholds.0.color
+            value: E53935
+          - type: STRING
+            name: columns.0.thresholds.0.threshold
+            value: '0'
+        - type: topitems
+          name: Collector diagnosis — reported status
+          x: '0'
+          y: '35'
+          width: '72'
+          height: '13'
+          fields:
+          - type: STRING
+            name: columns.0.items.0
+            value: 'Sidecar *: collector detail'
+          - type: INTEGER
+            name: columns.0.decimal_places
+            value: '0'
+          - type: INTEGER
+            name: item_ordering_order_by
+            value: '3'
+          - type: INTEGER
+            name: item_ordering_order
+            value: '3'
+          - type: INTEGER
+            name: item_ordering_limit
+            value: '100'
+          - type: INTEGER
+            name: layout
+            value: '1'
+          - type: INTEGER
+            name: show_problems
+            value: '0'
+          - type: STRING
+            name: columns.0.thresholds.0.color
+            value: E53935
+          - type: STRING
+            name: columns.0.thresholds.0.threshold
+            value: '0'
+          - type: INTEGER
+            name: columns.0.display_value_as
+            value: '2'
+          - type: STRING
+            name: columns.0.highlights.0.color
+            value: E53935
+          - type: STRING
+            name: columns.0.highlights.0.pattern
+            value: (?i)(failing|could not|no ping|stopped|error|failed)
