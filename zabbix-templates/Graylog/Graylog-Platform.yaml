@@ -11,7 +11,7 @@ zabbix_export:
       HTTP Basic username and literal token as password. Set {$GRAYLOG.API.URL} and {$GRAYLOG.DATANODE.PROXY} for your deployment, and
       define {$GRAYLOG.API.TOKEN} as a secret macro on the monitored host. Do not import onto existing host without resolving conflicting
       legacy items. All thresholds conservative; raw API failures surface as unsupported items (no silent zero fallback). Sidecar per-host
-      discovery is informational, aggregate failure alert only by default. All requests use Graylog API proxy, never direct OpenSearch.
+      discovery includes a High-severity trigger for each offline Sidecar. Collector failures remain aggregate by default. All requests use Graylog API proxy, never direct OpenSearch.
       OpenSearch _cat indexes have zero replicas on some message indices: informational exposure, no replication action performed.'
     groups:
     - name: Templates/Applications
@@ -435,14 +435,6 @@ zabbix_export:
       tags:
       - tag: component
         value: metric
-      triggers:
-      - uuid: 22a80241f01f4074b864493eddb78d7c
-        expression: min(/Graylog Platform by HTTP/graylog.sidecars.offline,15m)>={$GRAYLOG.SIDECAR.OFFLINE.WARN}
-        name: 'Graylog: multiple Sidecars offline'
-        priority: WARNING
-        tags:
-        - tag: component
-          value: graylog
     - uuid: ef469eb182914923a33bf64305112456
       name: 'Sidecars: collectors failing (hosts)'
       type: DEPENDENT
@@ -1386,6 +1378,19 @@ zabbix_export:
         tags:
         - tag: component
           value: metric
+      trigger_prototypes:
+      - uuid: 4f20ea201b2f4a1e8f10c29ba7a778d3
+        expression: last(/Graylog Platform by HTTP/graylog.sidecar.active[{#SCID}])=0 and last(/Graylog Platform by HTTP/graylog.sidecar.heartbeat.seconds[{#SCID}])>300
+        name: 'Graylog: Sidecar {#SCNAME} offline'
+        priority: HIGH
+        description: 'Graylog Sidecar has not checked in for over 5 minutes and Graylog reports it inactive. Acknowledge and document the reason; acknowledgement does not resolve the problem. It recovers on a fresh heartbeat or is cleaned up when the Sidecar disappears from discovery according to the lost-resource policy.'
+        tags:
+        - tag: component
+          value: graylog
+        - tag: scope
+          value: sidecar
+        - tag: sidecar
+          value: '{#SCNAME}'
     dashboards:
     - uuid: 8f4cc5cead634834a45cb60b589694a2
       name: Graylog | Operations
