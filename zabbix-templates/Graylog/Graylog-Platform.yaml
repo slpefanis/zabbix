@@ -7,13 +7,12 @@ zabbix_export:
   - uuid: d7272a8440d744b895533be1e7bf3d92
     template: Graylog Platform by HTTP
     name: Graylog Platform by HTTP
-    description: 'Single-host Graylog 7.1 API monitoring. Zabbix 7.4. Uses central HTTPS API with dedicated monitoring
-      API token as HTTP Basic username and literal token as password. Set {$GRAYLOG.API.URL} and {$GRAYLOG.DATANODE.PROXY}
-      for your deployment, and define {$GRAYLOG.API.TOKEN} as a secret macro on the monitored host. Do not import onto
-      existing host without resolving conflicting legacy items. All thresholds conservative; raw API failures surface
-      as unsupported items (no silent zero fallback). Sidecar per-host discovery is informational, aggregate failure
-      alert only by default. All requests use Graylog API proxy, never direct OpenSearch. OpenSearch _cat indexes have
-      zero replicas on some message indices: informational exposure, no replication action performed.'
+    description: 'Single-host Graylog 7.1 API monitoring. Zabbix 7.4. Uses central HTTPS API with dedicated monitoring API token as
+      HTTP Basic username and literal token as password. Set {$GRAYLOG.API.URL} and {$GRAYLOG.DATANODE.PROXY} for your deployment, and
+      define {$GRAYLOG.API.TOKEN} as a secret macro on the monitored host. Do not import onto existing host without resolving conflicting
+      legacy items. All thresholds conservative; raw API failures surface as unsupported items (no silent zero fallback). Sidecar per-host
+      discovery is informational, aggregate failure alert only by default. All requests use Graylog API proxy, never direct OpenSearch.
+      OpenSearch _cat indexes have zero replicas on some message indices: informational exposure, no replication action performed.'
     groups:
     - name: Templates/Applications
     tags:
@@ -214,6 +213,34 @@ zabbix_export:
       request_method: POST
       post_type: JSON
       posts: '{"metrics":["org.graylog2.throughput.input.1-sec-rate","org.graylog2.throughput.output.1-sec-rate"]}'
+    - uuid: d112b2ac0db44fc7978634a41a6bba26
+      name: 'Graylog: cumulative traffic counters raw'
+      type: HTTP_AGENT
+      key: graylog.traffic.raw
+      delay: 2m
+      history: 1d
+      value_type: TEXT
+      url: '{$GRAYLOG.API.URL}/cluster/metrics/multiple'
+      authtype: BASIC
+      username: '{$GRAYLOG.API.TOKEN}'
+      password: token
+      headers:
+      - name: X-Requested-By
+        value: Zabbix
+      - name: Accept
+        value: application/json
+      - name: Content-Type
+        value: application/json
+      status_codes: '200'
+      timeout: 15s
+      verify_peer: 'YES'
+      verify_host: 'YES'
+      tags:
+      - tag: component
+        value: raw
+      request_method: POST
+      post_type: JSON
+      posts: '{"metrics":["org.graylog2.traffic.input","org.graylog2.traffic.output"]}'
     - uuid: 1b45b1e25b4740d68eb358d9845d3369
       name: 'Graylog: application nodes seen'
       type: DEPENDENT
@@ -286,8 +313,7 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - var j=JSON.parse(value);var v=j.number_of_data_nodes; if(v===undefined||v===null) throw "Missing field"; return
-          v;
+        - var j=JSON.parse(value);var v=j.number_of_data_nodes; if(v===undefined||v===null) throw "Missing field"; return v;
       tags:
       - tag: component
         value: metric
@@ -310,8 +336,7 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - var j=JSON.parse(value);var v=j.unassigned_shards; if(v===undefined||v===null) throw "Missing field"; return
-          v;
+        - var j=JSON.parse(value);var v=j.unassigned_shards; if(v===undefined||v===null) throw "Missing field"; return v;
       tags:
       - tag: component
         value: metric
@@ -334,8 +359,7 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - var j=JSON.parse(value);var v=j.number_of_pending_tasks; if(v===undefined||v===null) throw "Missing field";
-          return v;
+        - var j=JSON.parse(value);var v=j.number_of_pending_tasks; if(v===undefined||v===null) throw "Missing field"; return v;
       tags:
       - tag: component
         value: metric
@@ -358,8 +382,8 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - var j=JSON.parse(value);var v=j.active_shards_percent_as_number; if(v===undefined||v===null) throw "Missing
-          field"; return v;
+        - var j=JSON.parse(value);var v=j.active_shards_percent_as_number; if(v===undefined||v===null) throw "Missing field"; return
+          v;
       tags:
       - tag: component
         value: metric
@@ -538,9 +562,9 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - var j=JSON.parse(value);var keys=Object.keys(j);if(!keys.length)throw "No nodes";var sum=0;keys.forEach(function(k){var
-          a=j[k].metrics.filter(function(m){return m.full_name==="org.graylog2.throughput.input.1-sec-rate";});if(a.length!==1||typeof
-          a[0].metric.value!=="number")throw "Missing input rate for "+k;sum+=a[0].metric.value;});return sum;
+        - var j=JSON.parse(value);var keys=Object.keys(j);if(!keys.length)throw "No nodes";var sum=0;keys.forEach(function(k){var a=j[k].metrics.filter(function(m){return
+          m.full_name==="org.graylog2.throughput.input.1-sec-rate";});if(a.length!==1||typeof a[0].metric.value!=="number")throw "Missing
+          input rate for "+k;sum+=a[0].metric.value;});return sum;
       tags:
       - tag: component
         value: metric
@@ -556,9 +580,9 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - var j=JSON.parse(value);var keys=Object.keys(j);if(!keys.length)throw "No nodes";var sum=0;keys.forEach(function(k){var
-          a=j[k].metrics.filter(function(m){return m.full_name==="org.graylog2.throughput.output.1-sec-rate";});if(a.length!==1||typeof
-          a[0].metric.value!=="number")throw "Missing output rate for "+k;sum+=a[0].metric.value;});return sum;
+        - var j=JSON.parse(value);var keys=Object.keys(j);if(!keys.length)throw "No nodes";var sum=0;keys.forEach(function(k){var a=j[k].metrics.filter(function(m){return
+          m.full_name==="org.graylog2.throughput.output.1-sec-rate";});if(a.length!==1||typeof a[0].metric.value!=="number")throw "Missing
+          output rate for "+k;sum+=a[0].metric.value;});return sum;
       tags:
       - tag: component
         value: metric
@@ -574,9 +598,9 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - var a=JSON.parse(value);var units={b:1,kb:1024,mb:1048576,gb:1073741824,tb:1099511627776,pb:1125899906842624};var
-          sum=0;a.forEach(function(x){if(!/^graylog_/.test(x.index))return;var m=String(x["store.size"]).toLowerCase().match(/^([0-9.]+)(b|kb|mb|gb|tb|pb)$/);if(!m)throw
-          "Unrecognised size for "+x.index;sum+=Number(m[1])*units[m[2]];});return Math.round(sum);
+        - var a=JSON.parse(value);var units={b:1,kb:1024,mb:1048576,gb:1073741824,tb:1099511627776,pb:1125899906842624};var sum=0;a.forEach(function(x){if(!/^graylog_/.test(x.index))return;var
+          m=String(x["store.size"]).toLowerCase().match(/^([0-9.]+)(b|kb|mb|gb|tb|pb)$/);if(!m)throw "Unrecognised size for "+x.index;sum+=Number(m[1])*units[m[2]];});return
+          Math.round(sum);
       tags:
       - tag: component
         value: metric
@@ -587,52 +611,173 @@ zabbix_export:
       key: graylog.sidecars.report.html
       history: 1d
       value_type: TEXT
-      description: Single HTML snapshot of all Sidecars, sorted by offline, collector failures, stopped, then healthy.
-        Output is limited to avoid oversized text item values.
+      description: Single HTML snapshot of all Sidecars, sorted by offline, collector failures, stopped, then healthy. Output is limited
+        to avoid oversized text item values.
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - "var data = JSON.parse(value);\nif (!data.sidecars || !Array.isArray(data.sidecars)) throw 'Missing Sidecar\
-          \ array';\nif (typeof data.total === 'number' && data.sidecars.length !== data.total) throw 'Incomplete Sidecar\
-          \ page: ' + data.sidecars.length + '/' + data.total;\nvar now = Date.now();\nfunction esc(v) { return String(v\
-          \ == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;');\
-          \ }\nfunction duration(ms) {\n  if (!isFinite(ms) || ms < 0) return 'unknown';\n  var sec = Math.floor(ms/1000);\n\
-          \  if (sec < 60) return sec + 's';\n  var m = Math.floor(sec/60); if (m < 60) return m + 'm';\n  var h = Math.floor(m/60);\
-          \ if (h < 24) return h + 'h ' + (m%60) + 'm';\n  return Math.floor(h/24) + 'd ' + (h%24) + 'h';\n}\nvar rows\
-          \ = data.sidecars.map(function(s) {\n  var details = s.node_details || {};\n  var st = details.status || {};\n\
-          \  var c = st.collectors || [];\n  var failures = c.filter(function(x){return Number(x.status)===2;});\n  var\
-          \ stopped = c.filter(function(x){return Number(x.status)===1;});\n  var running = c.filter(function(x){return\
-          \ Number(x.status)===0;}).length;\n  var last = s.last_seen ? Date.parse(s.last_seen) : NaN;\n  var age = isFinite(last)\
-          \ ? Math.max(0,now-last) : Infinity;\n  var state = !s.active ? 'OFFLINE' : failures.length ? 'FAILING' : stopped.length\
-          \ ? 'STOPPED' : 'HEALTHY';\n  var rank = state==='OFFLINE' ? 0 : state==='FAILING' ? 1 : state==='STOPPED'\
-          \ ? 2 : 3;\n  var messages = c.filter(function(x){return Number(x.status)!==0;}).map(function(x){return x.message\
-          \ || x.verbose_message || 'Collector issue';});\n  if (!messages.length && rank<3 && st.message) messages=[st.message];\n\
-          \  var detail = messages.join('; ');\n  if (detail.length>140) detail=detail.slice(0,137)+'...';\n  var collectorText\
-          \ = running + ' running';\n  if (failures.length) collectorText += ', ' + failures.length + ' failing';\n \
-          \ if (stopped.length) collectorText += ', ' + stopped.length + ' stopped';\n  if (!c.length) collectorText\
-          \ = 'No collectors reported';\n  return {rank:rank,age:age,name:s.node_name||s.node_id||'unknown',ip:details.ip||'',version:s.sidecar_version||'',state:state,collectorText:collectorText,detail:detail};\n\
+        - "var data = JSON.parse(value);\nif (!data.sidecars || !Array.isArray(data.sidecars)) throw 'Missing Sidecar array';\nif (typeof\
+          \ data.total === 'number' && data.sidecars.length !== data.total) throw 'Incomplete Sidecar page: ' + data.sidecars.length\
+          \ + '/' + data.total;\nvar now = Date.now();\nfunction esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"\
+          /g,'&quot;').replace(/'/g,'&#39;'); }\nfunction duration(ms) {\n  if (!isFinite(ms) || ms < 0) return 'unknown';\n  var sec\
+          \ = Math.floor(ms/1000);\n  if (sec < 60) return sec + 's';\n  var m = Math.floor(sec/60); if (m < 60) return m + 'm';\n \
+          \ var h = Math.floor(m/60); if (h < 24) return h + 'h ' + (m%60) + 'm';\n  return Math.floor(h/24) + 'd ' + (h%24) + 'h';\n\
+          }\nvar rows = data.sidecars.map(function(s) {\n  var details = s.node_details || {};\n  var st = details.status || {};\n \
+          \ var c = st.collectors || [];\n  var failures = c.filter(function(x){return Number(x.status)===2;});\n  var stopped = c.filter(function(x){return\
+          \ Number(x.status)===1;});\n  var running = c.filter(function(x){return Number(x.status)===0;}).length;\n  var last = s.last_seen\
+          \ ? Date.parse(s.last_seen) : NaN;\n  var age = isFinite(last) ? Math.max(0,now-last) : Infinity;\n  var state = !s.active\
+          \ ? 'OFFLINE' : failures.length ? 'FAILING' : stopped.length ? 'STOPPED' : 'HEALTHY';\n  var rank = state==='OFFLINE' ? 0\
+          \ : state==='FAILING' ? 1 : state==='STOPPED' ? 2 : 3;\n  var messages = c.filter(function(x){return Number(x.status)!==0;}).map(function(x){return\
+          \ x.message || x.verbose_message || 'Collector issue';});\n  if (!messages.length && rank<3 && st.message) messages=[st.message];\n\
+          \  var detail = messages.join('; ');\n  if (detail.length>140) detail=detail.slice(0,137)+'...';\n  var collectorText = running\
+          \ + ' running';\n  if (failures.length) collectorText += ', ' + failures.length + ' failing';\n  if (stopped.length) collectorText\
+          \ += ', ' + stopped.length + ' stopped';\n  if (!c.length) collectorText = 'No collectors reported';\n  return {rank:rank,age:age,name:s.node_name||s.node_id||'unknown',ip:details.ip||'',version:s.sidecar_version||'',state:state,collectorText:collectorText,detail:detail};\n\
           });\nrows.sort(function(a,b){return a.rank-b.rank || b.age-a.age || a.name.localeCompare(b.name);});\nvar offline=rows.filter(function(x){return\
           \ x.rank===0;}).length;\nvar failing=rows.filter(function(x){return x.rank===1;}).length;\nvar stopped=rows.filter(function(x){return\
           \ x.rank===2;}).length;\nvar h=['<div style=\"font-family:Arial,sans-serif;font-size:12px;color:#e5e7eb;background-color:#202328\"\
-          >',\n'<div style=\"padding:8px 10px;color:#e5e7eb;background-color:#202328\"><b>Sidecars: '+rows.length+'</b>\
-          \ &nbsp; | &nbsp; <span style=\"color:#fca5a5\">Offline: '+offline+'</span> &nbsp; | &nbsp; <span style=\"\
-          color:#fdba74\">Failing: '+failing+'</span> &nbsp; | &nbsp; Stopped: '+stopped+'</div>',\n'<table style=\"\
-          width:100%;table-layout:fixed;border-collapse:collapse;font-size:12px;color:#e5e7eb;background-color:#262a30\"\
-          \ border=\"1\" cellpadding=\"5\" cellspacing=\"0\">',\n'<thead><tr style=\"background-color:#303743;color:#ffffff\"\
-          ><th width=\"18%\" align=\"left\">Sidecar</th><th width=\"9%\" align=\"left\">Status</th><th width=\"11%\"\
-          \ align=\"left\">IP address</th><th width=\"7%\" align=\"left\">Version</th><th width=\"9%\" align=\"left\"\
-          >Last seen</th><th width=\"13%\" align=\"left\">Collectors</th><th width=\"33%\" align=\"left\">Problem / error</th></tr></thead><tbody>'];\n\
-          rows.forEach(function(r){\n  var bg=r.rank===0?'#48272e':r.rank===1?'#473323':r.rank===2?'#423b28':'#262a30';\n\
-          \  var accent=r.rank===0?'#fca5a5':r.rank===1?'#fdba74':r.rank===2?'#fde68a':'#86efac';\n  var style=' style=\"\
-          background-color:'+bg+';color:#f8fafc\"';\n  h.push('<tr'+style+'><td style=\"color:#f8fafc\">'+esc(r.name)+'</td><td><b\
-          \ style=\"color:'+accent+'\">'+r.state+'</b></td><td>'+esc(r.ip)+'</td><td>'+esc(r.version)+'</td><td>'+duration(r.age)+'</td><td>'+esc(r.collectorText)+'</td><td>'+esc(r.detail)+'</td></tr>');\n\
-          });\nh.push('</tbody></table></div>');\nvar html=h.join('');\nif (html.length>60000) throw 'Sidecar report\
-          \ exceeds 60k characters: '+html.length;\nreturn html;"
+          >',\n'<div style=\"padding:8px 10px;color:#e5e7eb;background-color:#202328\"><b>Sidecars: '+rows.length+'</b> &nbsp; | &nbsp;\
+          \ <span style=\"color:#fca5a5\">Offline: '+offline+'</span> &nbsp; | &nbsp; <span style=\"color:#fdba74\">Failing: '+failing+'</span>\
+          \ &nbsp; | &nbsp; Stopped: '+stopped+'</div>',\n'<table style=\"width:100%;table-layout:fixed;border-collapse:collapse;font-size:12px;color:#e5e7eb;background-color:#262a30\"\
+          \ border=\"1\" cellpadding=\"5\" cellspacing=\"0\">',\n'<thead><tr style=\"background-color:#303743;color:#ffffff\"><th width=\"\
+          18%\" align=\"left\">Sidecar</th><th width=\"9%\" align=\"left\">Status</th><th width=\"11%\" align=\"left\">IP address</th><th\
+          \ width=\"7%\" align=\"left\">Version</th><th width=\"9%\" align=\"left\">Last seen</th><th width=\"13%\" align=\"left\">Collectors</th><th\
+          \ width=\"33%\" align=\"left\">Problem / error</th></tr></thead><tbody>'];\nrows.forEach(function(r){\n  var bg=r.rank===0?'#48272e':r.rank===1?'#473323':r.rank===2?'#423b28':'#262a30';\n\
+          \  var accent=r.rank===0?'#fca5a5':r.rank===1?'#fdba74':r.rank===2?'#fde68a':'#86efac';\n  var style=' style=\"background-color:'+bg+';color:#f8fafc\"\
+          ';\n  h.push('<tr'+style+'><td style=\"color:#f8fafc\">'+esc(r.name)+'</td><td><b style=\"color:'+accent+'\">'+r.state+'</b></td><td>'+esc(r.ip)+'</td><td>'+esc(r.version)+'</td><td>'+duration(r.age)+'</td><td>'+esc(r.collectorText)+'</td><td>'+esc(r.detail)+'</td></tr>');\n\
+          });\nh.push('</tbody></table></div>');\nvar html=h.join('');\nif (html.length>60000) throw 'Sidecar report exceeds 60k characters:\
+          \ '+html.length;\nreturn html;"
       master_item:
         key: graylog.sidecars.raw
       tags:
       - tag: component
         value: sidecar
+    - uuid: 00fdda7affc84dafba2092b748c80df0
+      name: 'Graylog: input traffic, rolling 1h'
+      type: CALCULATED
+      key: graylog.traffic.input.rolling.hour
+      params: sum(sum_foreach(//graylog.traffic.input.delta[*],1h))
+      delay: 15m
+      value_type: FLOAT
+      units: B
+      history: 60d
+      trends: 365d
+      description: Rolling 1h total of per-node counter increases. Not a calendar-boundary total. Missing polls/restarts may undercount.
+      tags:
+      - tag: component
+        value: metric
+    - uuid: 588ec43b963b4c30b412ee57de64f81a
+      name: 'Graylog: input traffic, rolling 24h'
+      type: CALCULATED
+      key: graylog.traffic.input.rolling.day
+      params: sum(sum_foreach(//graylog.traffic.input.delta[*],24h))
+      delay: 15m
+      value_type: FLOAT
+      units: B
+      history: 60d
+      trends: 365d
+      description: Rolling 24h total of per-node counter increases. Not a calendar-boundary total. Missing polls/restarts may undercount.
+      tags:
+      - tag: component
+        value: metric
+    - uuid: 905bf3c8a0cf4fef8d2138b8a4ed73b6
+      name: 'Graylog: input traffic, rolling 30d'
+      type: CALCULATED
+      key: graylog.traffic.input.rolling.month
+      params: sum(sum_foreach(//graylog.traffic.input.delta[*],30d))
+      delay: 15m
+      value_type: FLOAT
+      units: B
+      history: 60d
+      trends: 365d
+      description: Rolling 30d total of per-node counter increases. Not a calendar-boundary total. Missing polls/restarts may undercount.
+      tags:
+      - tag: component
+        value: metric
+    - uuid: b3804e26833f4707872fde3e83878669
+      name: 'Graylog: cluster input traffic bytes per second'
+      type: CALCULATED
+      key: graylog.traffic.input.bps
+      params: sum(last_foreach(//graylog.traffic.input.bps[*]))
+      delay: 2m
+      value_type: FLOAT
+      units: Bps
+      history: 60d
+      trends: 365d
+      description: Sum of discovered GLAPP byte rates.
+      tags:
+      - tag: component
+        value: metric
+    - uuid: 5ad9929d633f4745b0d51f73e2d082e1
+      name: 'Graylog: output traffic, rolling 1h'
+      type: CALCULATED
+      key: graylog.traffic.output.rolling.hour
+      params: sum(sum_foreach(//graylog.traffic.output.delta[*],1h))
+      delay: 15m
+      value_type: FLOAT
+      units: B
+      history: 60d
+      trends: 365d
+      description: Rolling 1h total of per-node counter increases. Not a calendar-boundary total. Missing polls/restarts may undercount.
+      tags:
+      - tag: component
+        value: metric
+    - uuid: 217ee7d55f91469f8e09931930c91edc
+      name: 'Graylog: output traffic, rolling 24h'
+      type: CALCULATED
+      key: graylog.traffic.output.rolling.day
+      params: sum(sum_foreach(//graylog.traffic.output.delta[*],24h))
+      delay: 15m
+      value_type: FLOAT
+      units: B
+      history: 60d
+      trends: 365d
+      description: Rolling 24h total of per-node counter increases. Not a calendar-boundary total. Missing polls/restarts may undercount.
+      tags:
+      - tag: component
+        value: metric
+    - uuid: fa03f0c0fc0f46468ed15a39a8d4cc58
+      name: 'Graylog: output traffic, rolling 30d'
+      type: CALCULATED
+      key: graylog.traffic.output.rolling.month
+      params: sum(sum_foreach(//graylog.traffic.output.delta[*],30d))
+      delay: 15m
+      value_type: FLOAT
+      units: B
+      history: 60d
+      trends: 365d
+      description: Rolling 30d total of per-node counter increases. Not a calendar-boundary total. Missing polls/restarts may undercount.
+      tags:
+      - tag: component
+        value: metric
+    - uuid: 2659fd12152f4b36b16b2e53a749bfbf
+      name: 'Graylog: cluster output traffic bytes per second'
+      type: CALCULATED
+      key: graylog.traffic.output.bps
+      params: sum(last_foreach(//graylog.traffic.output.bps[*]))
+      delay: 2m
+      value_type: FLOAT
+      units: Bps
+      history: 60d
+      trends: 365d
+      description: Sum of discovered GLAPP byte rates.
+      tags:
+      - tag: component
+        value: metric
+    - uuid: 91a6dbf13cf046669bb743daae46d4fd
+      name: 'Graylog: projected 30d input traffic from rolling 24h'
+      type: CALCULATED
+      key: graylog.traffic.input.projected.30d
+      params: last(//graylog.traffic.input.rolling.day)*30
+      delay: 15m
+      value_type: FLOAT
+      units: B
+      history: 60d
+      trends: 365d
+      description: 'ESTIMATE only: trailing 24h incoming bytes multiplied by 30. Not actual monthly usage. Requires a complete 24h window
+        for a representative projection.'
+      tags:
+      - tag: component
+        value: metric
     discovery_rules:
     - uuid: cf9925e13a174e3eb6baf86085fca608
       name: Graylog application nodes discovery
@@ -742,8 +887,7 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var v=j.journal_size_limit; if(v===undefined||v===null) throw "Missing field"; return
-            v;
+          - var j=JSON.parse(value);var v=j.journal_size_limit; if(v===undefined||v===null) throw "Missing field"; return v;
         tags:
         - tag: component
           value: metric
@@ -759,8 +903,7 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var v=j.uncommitted_journal_entries; if(v===undefined||v===null) throw "Missing field";
-            return v;
+          - var j=JSON.parse(value);var v=j.uncommitted_journal_entries; if(v===undefined||v===null) throw "Missing field"; return v;
         tags:
         - tag: component
           value: metric
@@ -791,9 +934,8 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var n=j["{#NODEID}"];if(!n)throw "Node absent";var a=n.metrics.filter(function(x){return
-            x.full_name==="org.graylog2.throughput.input.1-sec-rate";});if(a.length!==1)throw "Metric absent";return
-            a[0].metric.value;
+          - var j=JSON.parse(value);var n=j["{#NODEID}"];if(!n)throw "Node absent";var a=n.metrics.filter(function(x){return x.full_name==="org.graylog2.throughput.input.1-sec-rate";});if(a.length!==1)throw
+            "Metric absent";return a[0].metric.value;
         tags:
         - tag: component
           value: metric
@@ -809,13 +951,136 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var n=j["{#NODEID}"];if(!n)throw "Node absent";var a=n.metrics.filter(function(x){return
-            x.full_name==="org.graylog2.throughput.output.1-sec-rate";});if(a.length!==1)throw "Metric absent";return
-            a[0].metric.value;
+          - var j=JSON.parse(value);var n=j["{#NODEID}"];if(!n)throw "Node absent";var a=n.metrics.filter(function(x){return x.full_name==="org.graylog2.throughput.output.1-sec-rate";});if(a.length!==1)throw
+            "Metric absent";return a[0].metric.value;
         tags:
         - tag: component
           value: metric
         units: msg/s
+      - uuid: b25571089a4e4b9d8d0b68e308a7d0f3
+        name: 'Graylog {#NODENAME}: input traffic bytes per interval'
+        type: DEPENDENT
+        key: graylog.traffic.input.delta[{#NODEID}]
+        value_type: UNSIGNED
+        units: B
+        history: 60d
+        trends: 365d
+        master_item:
+          key: graylog.traffic.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value), n=j["{#NODEID}"];if(!n||!Array.isArray(n.metrics))throw "Node traffic missing";var a=n.metrics.filter(function(m){return
+            m.full_name==="org.graylog2.traffic.input";});if(a.length!==1||!a[0].metric||typeof a[0].metric.count!=="number"||a[0].metric.count<0)throw
+            "Traffic counter missing";return a[0].metric.count;
+        - type: SIMPLE_CHANGE
+        description: Graylog process counter. Zabbix drops negative counter changes on restart; gaps can cause undercounting.
+        tags:
+        - tag: component
+          value: metric
+      - uuid: 4fa123c5598f48ebb7977092805ab298
+        name: 'Graylog {#NODENAME}: input traffic bytes per second'
+        type: DEPENDENT
+        key: graylog.traffic.input.bps[{#NODEID}]
+        value_type: FLOAT
+        units: Bps
+        history: 60d
+        trends: 365d
+        master_item:
+          key: graylog.traffic.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value), n=j["{#NODEID}"];if(!n||!Array.isArray(n.metrics))throw "Node traffic missing";var a=n.metrics.filter(function(m){return
+            m.full_name==="org.graylog2.traffic.input";});if(a.length!==1||!a[0].metric||typeof a[0].metric.count!=="number"||a[0].metric.count<0)throw
+            "Traffic counter missing";return a[0].metric.count;
+        - type: CHANGE_PER_SECOND
+        description: Graylog process counter. Zabbix drops negative counter changes on restart; gaps can cause undercounting.
+        tags:
+        - tag: component
+          value: metric
+      - uuid: c078835c673f4a74aff3fe1a0fdb55e3
+        name: 'Graylog {#NODENAME}: input cumulative bytes'
+        type: DEPENDENT
+        key: graylog.traffic.input.counter[{#NODEID}]
+        value_type: UNSIGNED
+        units: B
+        history: 7d
+        trends: 365d
+        master_item:
+          key: graylog.traffic.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value), n=j["{#NODEID}"];if(!n||!Array.isArray(n.metrics))throw "Node traffic missing";var a=n.metrics.filter(function(m){return
+            m.full_name==="org.graylog2.traffic.input";});if(a.length!==1||!a[0].metric||typeof a[0].metric.count!=="number"||a[0].metric.count<0)throw
+            "Traffic counter missing";return a[0].metric.count;
+        description: Graylog process-lifetime byte counter; resets on process restart.
+        tags:
+        - tag: component
+          value: metric
+      - uuid: 3b1a7005de9448d5b6d31cfcfccc2ec1
+        name: 'Graylog {#NODENAME}: output traffic bytes per interval'
+        type: DEPENDENT
+        key: graylog.traffic.output.delta[{#NODEID}]
+        value_type: UNSIGNED
+        units: B
+        history: 60d
+        trends: 365d
+        master_item:
+          key: graylog.traffic.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value), n=j["{#NODEID}"];if(!n||!Array.isArray(n.metrics))throw "Node traffic missing";var a=n.metrics.filter(function(m){return
+            m.full_name==="org.graylog2.traffic.output";});if(a.length!==1||!a[0].metric||typeof a[0].metric.count!=="number"||a[0].metric.count<0)throw
+            "Traffic counter missing";return a[0].metric.count;
+        - type: SIMPLE_CHANGE
+        description: Graylog process counter. Zabbix drops negative counter changes on restart; gaps can cause undercounting.
+        tags:
+        - tag: component
+          value: metric
+      - uuid: 010e5c8d0364489d83b650af352c4913
+        name: 'Graylog {#NODENAME}: output traffic bytes per second'
+        type: DEPENDENT
+        key: graylog.traffic.output.bps[{#NODEID}]
+        value_type: FLOAT
+        units: Bps
+        history: 60d
+        trends: 365d
+        master_item:
+          key: graylog.traffic.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value), n=j["{#NODEID}"];if(!n||!Array.isArray(n.metrics))throw "Node traffic missing";var a=n.metrics.filter(function(m){return
+            m.full_name==="org.graylog2.traffic.output";});if(a.length!==1||!a[0].metric||typeof a[0].metric.count!=="number"||a[0].metric.count<0)throw
+            "Traffic counter missing";return a[0].metric.count;
+        - type: CHANGE_PER_SECOND
+        description: Graylog process counter. Zabbix drops negative counter changes on restart; gaps can cause undercounting.
+        tags:
+        - tag: component
+          value: metric
+      - uuid: a90f92f92c9e471cb8b8204eba725ea2
+        name: 'Graylog {#NODENAME}: output cumulative bytes'
+        type: DEPENDENT
+        key: graylog.traffic.output.counter[{#NODEID}]
+        value_type: UNSIGNED
+        units: B
+        history: 7d
+        trends: 365d
+        master_item:
+          key: graylog.traffic.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value), n=j["{#NODEID}"];if(!n||!Array.isArray(n.metrics))throw "Node traffic missing";var a=n.metrics.filter(function(m){return
+            m.full_name==="org.graylog2.traffic.output";});if(a.length!==1||!a[0].metric||typeof a[0].metric.count!=="number"||a[0].metric.count<0)throw
+            "Traffic counter missing";return a[0].metric.count;
+        description: Graylog process-lifetime byte counter; resets on process restart.
+        tags:
+        - tag: component
+          value: metric
       trigger_prototypes:
       - uuid: 4526f4506ab441859dd12e3623cec5f7
         expression: last(/Graylog Platform by HTTP/graylog.app.lifecycle[{#NODEID}])<>"running"
@@ -871,9 +1136,8 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data
-            Node missing";var x=a[0]["heap.percent"];if(x===undefined||x===null||x==="")throw "Metric missing";return
-            Number(x);
+          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data Node missing";var
+            x=a[0]["heap.percent"];if(x===undefined||x===null||x==="")throw "Metric missing";return Number(x);
         tags:
         - tag: component
           value: metric
@@ -889,9 +1153,8 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data
-            Node missing";var x=a[0]["ram.percent"];if(x===undefined||x===null||x==="")throw "Metric missing";return
-            Number(x);
+          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data Node missing";var
+            x=a[0]["ram.percent"];if(x===undefined||x===null||x==="")throw "Metric missing";return Number(x);
         tags:
         - tag: component
           value: metric
@@ -907,8 +1170,8 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data
-            Node missing";var x=a[0]["cpu"];if(x===undefined||x===null||x==="")throw "Metric missing";return Number(x);
+          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data Node missing";var
+            x=a[0]["cpu"];if(x===undefined||x===null||x==="")throw "Metric missing";return Number(x);
         tags:
         - tag: component
           value: metric
@@ -924,8 +1187,8 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data
-            Node missing";var x=a[0]["load_1m"];if(x===undefined||x===null||x==="")throw "Metric missing";return Number(x);
+          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data Node missing";var
+            x=a[0]["load_1m"];if(x===undefined||x===null||x==="")throw "Metric missing";return Number(x);
         tags:
         - tag: component
           value: metric
@@ -940,9 +1203,8 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data
-            Node missing";var x=a[0]["disk.used_percent"];if(x===undefined||x===null||x==="")throw "Metric missing";return
-            Number(x);
+          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data Node missing";var
+            x=a[0]["disk.used_percent"];if(x===undefined||x===null||x==="")throw "Metric missing";return Number(x);
         tags:
         - tag: component
           value: metric
@@ -989,8 +1251,8 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j["{#NODEID}"];if(!a)throw "Node input list absent";var b=a.filter(function(x){return
-            x.id==="{#INPUTID}";});if(b.length!==1)throw "Input missing";return b[0].state==="RUNNING"?1:0;
+          - var j=JSON.parse(value);var a=j["{#NODEID}"];if(!a)throw "Node input list absent";var b=a.filter(function(x){return x.id==="{#INPUTID}";});if(b.length!==1)throw
+            "Input missing";return b[0].state==="RUNNING"?1:0;
         tags:
         - tag: component
           value: metric
@@ -1029,8 +1291,8 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw
-            "Sidecar missing";var s=a[0];return s.active?1:0;
+          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw "Sidecar
+            missing";var s=a[0];return s.active?1:0;
         tags:
         - tag: component
           value: metric
@@ -1045,9 +1307,9 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw
-            "Sidecar missing";var s=a[0];if(!s.last_seen)throw "No heartbeat";var ts=Date.parse(s.last_seen);if(!isFinite(ts))throw
-            "Invalid heartbeat timestamp";return Math.max(0,Math.floor((Date.now()-ts)/1000));
+          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw "Sidecar
+            missing";var s=a[0];if(!s.last_seen)throw "No heartbeat";var ts=Date.parse(s.last_seen);if(!isFinite(ts))throw "Invalid
+            heartbeat timestamp";return Math.max(0,Math.floor((Date.now()-ts)/1000));
         tags:
         - tag: component
           value: metric
@@ -1063,8 +1325,8 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw
-            "Sidecar missing";var s=a[0];return (s.node_details&&s.node_details.status&&s.node_details.status.collectors||[]).filter(function(c){return
+          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw "Sidecar
+            missing";var s=a[0];return (s.node_details&&s.node_details.status&&s.node_details.status.collectors||[]).filter(function(c){return
             c.status===2;}).length;
         tags:
         - tag: component
@@ -1080,8 +1342,8 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw
-            "Sidecar missing";var s=a[0];if(!s.sidecar_version)throw "Version missing";return s.sidecar_version;
+          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw "Sidecar
+            missing";var s=a[0];if(!s.sidecar_version)throw "Version missing";return s.sidecar_version;
         tags:
         - tag: component
           value: metric
@@ -1096,10 +1358,9 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw
-            "Sidecar missing";var s=a[0];var st=s.node_details&&s.node_details.status||{};var bad=(st.collectors||[]).filter(function(c){return
-            c.status!==0;}).map(function(c){return c.message||"Collector not running";});return (bad.length?bad.join("
-            | "):(st.message||"Unknown")).substring(0,250);
+          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw "Sidecar
+            missing";var s=a[0];var st=s.node_details&&s.node_details.status||{};var bad=(st.collectors||[]).filter(function(c){return
+            c.status!==0;}).map(function(c){return c.message||"Collector not running";});return (bad.length?bad.join(" | "):(st.message||"Unknown")).substring(0,250);
         tags:
         - tag: component
           value: metric
@@ -1114,14 +1375,14 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw
-            "Sidecar missing";var s=a[0];var st=s.node_details&&s.node_details.status||{};var cs=st.collectors||[];var
-            bad=cs.filter(function(c){return c.status!==0;});var ts=Date.parse(s.last_seen||"");var age=isFinite(ts)?Math.max(0,Math.floor((Date.now()-ts)/1000)):null;function
+          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw "Sidecar
+            missing";var s=a[0];var st=s.node_details&&s.node_details.status||{};var cs=st.collectors||[];var bad=cs.filter(function(c){return
+            c.status!==0;});var ts=Date.parse(s.last_seen||"");var age=isFinite(ts)?Math.max(0,Math.floor((Date.now()-ts)/1000)):null;function
             ageStr(v){if(v===null)return "unknown";if(v>=86400)return Math.floor(v/86400)+"d "+Math.floor(v%86400/3600)+"h";if(v>=3600)return
-            Math.floor(v/3600)+"h "+Math.floor(v%3600/60)+"m";if(v>=60)return Math.floor(v/60)+"m "+(v%60)+"s";return
-            v+"s";}var status=s.active?"ONLINE":"OFFLINE";var msgs=bad.map(function(c){return c.message||"Collector status
-            "+c.status;});return (status+" | "+(s.node_details&&s.node_details.ip||"unknown IP")+" | v"+(s.sidecar_version||"?")+"
-            | last "+ageStr(age)+" | "+bad.length+" collector issue(s)"+(msgs.length?" | "+msgs.join("; "):"")).substring(0,2000);
+            Math.floor(v/3600)+"h "+Math.floor(v%3600/60)+"m";if(v>=60)return Math.floor(v/60)+"m "+(v%60)+"s";return v+"s";}var status=s.active?"ONLINE":"OFFLINE";var
+            msgs=bad.map(function(c){return c.message||"Collector status "+c.status;});return (status+" | "+(s.node_details&&s.node_details.ip||"unknown
+            IP")+" | v"+(s.sidecar_version||"?")+" | last "+ageStr(age)+" | "+bad.length+" collector issue(s)"+(msgs.length?" | "+msgs.join(";
+            "):"")).substring(0,2000);
         tags:
         - tag: component
           value: metric
@@ -1272,8 +1533,38 @@ zabbix_export:
               host: Graylog Platform by HTTP
               key: graylog.throughput.cluster.input
           - type: INTEGER
+            name: show.0
+            value: '1'
+          - type: INTEGER
+            name: show.1
+            value: '2'
+          - type: INTEGER
+            name: show.2
+            value: '5'
+          - type: INTEGER
+            name: value_size
+            value: '44'
+          - type: INTEGER
+            name: desc_size
+            value: '13'
+          - type: INTEGER
             name: decimal_places
             value: '0'
+          - type: INTEGER
+            name: sparkline.width
+            value: '2'
+          - type: INTEGER
+            name: sparkline.fill
+            value: '1'
+          - type: STRING
+            name: sparkline.color
+            value: 42A5F5
+          - type: STRING
+            name: sparkline.time_period.from
+            value: now-24h
+          - type: STRING
+            name: sparkline.time_period.to
+            value: now
         - type: item
           name: Outgoing rate
           x: '24'
@@ -1287,8 +1578,38 @@ zabbix_export:
               host: Graylog Platform by HTTP
               key: graylog.throughput.cluster.output
           - type: INTEGER
+            name: show.0
+            value: '1'
+          - type: INTEGER
+            name: show.1
+            value: '2'
+          - type: INTEGER
+            name: show.2
+            value: '5'
+          - type: INTEGER
+            name: value_size
+            value: '44'
+          - type: INTEGER
+            name: desc_size
+            value: '13'
+          - type: INTEGER
             name: decimal_places
             value: '0'
+          - type: INTEGER
+            name: sparkline.width
+            value: '2'
+          - type: INTEGER
+            name: sparkline.fill
+            value: '1'
+          - type: STRING
+            name: sparkline.color
+            value: 42A5F5
+          - type: STRING
+            name: sparkline.time_period.from
+            value: now-24h
+          - type: STRING
+            name: sparkline.time_period.to
+            value: now
         - type: item
           name: Message index storage
           x: '48'
@@ -1302,12 +1623,42 @@ zabbix_export:
               host: Graylog Platform by HTTP
               key: graylog.indices.message.bytes
           - type: INTEGER
+            name: show.0
+            value: '1'
+          - type: INTEGER
+            name: show.1
+            value: '2'
+          - type: INTEGER
+            name: show.2
+            value: '5'
+          - type: INTEGER
+            name: value_size
+            value: '44'
+          - type: INTEGER
+            name: desc_size
+            value: '13'
+          - type: INTEGER
             name: decimal_places
             value: '0'
+          - type: INTEGER
+            name: sparkline.width
+            value: '2'
+          - type: INTEGER
+            name: sparkline.fill
+            value: '1'
+          - type: STRING
+            name: sparkline.color
+            value: 42A5F5
+          - type: STRING
+            name: sparkline.time_period.from
+            value: now-24h
+          - type: STRING
+            name: sparkline.time_period.to
+            value: now
         - type: item
           name: Message indices
           x: '0'
-          y: '5'
+          y: '4'
           width: '24'
           height: '4'
           fields:
@@ -1317,12 +1668,42 @@ zabbix_export:
               host: Graylog Platform by HTTP
               key: graylog.indices.message.count
           - type: INTEGER
+            name: show.0
+            value: '1'
+          - type: INTEGER
+            name: show.1
+            value: '2'
+          - type: INTEGER
+            name: show.2
+            value: '5'
+          - type: INTEGER
+            name: value_size
+            value: '44'
+          - type: INTEGER
+            name: desc_size
+            value: '13'
+          - type: INTEGER
             name: decimal_places
             value: '0'
+          - type: INTEGER
+            name: sparkline.width
+            value: '2'
+          - type: INTEGER
+            name: sparkline.fill
+            value: '1'
+          - type: STRING
+            name: sparkline.color
+            value: 42A5F5
+          - type: STRING
+            name: sparkline.time_period.from
+            value: now-24h
+          - type: STRING
+            name: sparkline.time_period.to
+            value: now
         - type: item
           name: Indices not green
           x: '24'
-          y: '5'
+          y: '4'
           width: '24'
           height: '4'
           fields:
@@ -1332,12 +1713,42 @@ zabbix_export:
               host: Graylog Platform by HTTP
               key: graylog.indices.notgreen
           - type: INTEGER
+            name: show.0
+            value: '1'
+          - type: INTEGER
+            name: show.1
+            value: '2'
+          - type: INTEGER
+            name: show.2
+            value: '5'
+          - type: INTEGER
+            name: value_size
+            value: '44'
+          - type: INTEGER
+            name: desc_size
+            value: '13'
+          - type: INTEGER
             name: decimal_places
             value: '0'
+          - type: INTEGER
+            name: sparkline.width
+            value: '2'
+          - type: INTEGER
+            name: sparkline.fill
+            value: '1'
+          - type: STRING
+            name: sparkline.color
+            value: 42A5F5
+          - type: STRING
+            name: sparkline.time_period.from
+            value: now-24h
+          - type: STRING
+            name: sparkline.time_period.to
+            value: now
         - type: item
           name: Indices without replicas
           x: '48'
-          y: '5'
+          y: '4'
           width: '24'
           height: '4'
           fields:
@@ -1347,8 +1758,38 @@ zabbix_export:
               host: Graylog Platform by HTTP
               key: graylog.indices.message.noreplica
           - type: INTEGER
+            name: show.0
+            value: '1'
+          - type: INTEGER
+            name: show.1
+            value: '2'
+          - type: INTEGER
+            name: show.2
+            value: '5'
+          - type: INTEGER
+            name: value_size
+            value: '44'
+          - type: INTEGER
+            name: desc_size
+            value: '13'
+          - type: INTEGER
             name: decimal_places
             value: '0'
+          - type: INTEGER
+            name: sparkline.width
+            value: '2'
+          - type: INTEGER
+            name: sparkline.fill
+            value: '1'
+          - type: STRING
+            name: sparkline.color
+            value: 42A5F5
+          - type: STRING
+            name: sparkline.time_period.from
+            value: now-24h
+          - type: STRING
+            name: sparkline.time_period.to
+            value: now
       - name: Sidecar diagnostics
         widgets:
         - type: itemhistory
@@ -1384,3 +1825,314 @@ zabbix_export:
           - type: STRING
             name: reference
             value: SCREP
+      - name: Ingestion & capacity
+        display_period: '30'
+        widgets:
+        - type: item
+          name: Incoming - rolling 24h
+          x: '0'
+          y: '0'
+          width: '18'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.traffic.input.rolling.day
+          - type: INTEGER
+            name: decimal_places
+            value: '2'
+          - type: INTEGER
+            name: show.0
+            value: '1'
+          - type: INTEGER
+            name: show.1
+            value: '2'
+          - type: INTEGER
+            name: value_size
+            value: '44'
+          - type: INTEGER
+            name: desc_size
+            value: '13'
+        - type: item
+          name: Processed - rolling 24h
+          x: '18'
+          y: '0'
+          width: '18'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.traffic.output.rolling.day
+          - type: INTEGER
+            name: decimal_places
+            value: '2'
+          - type: INTEGER
+            name: show.0
+            value: '1'
+          - type: INTEGER
+            name: show.1
+            value: '2'
+          - type: INTEGER
+            name: value_size
+            value: '44'
+          - type: INTEGER
+            name: desc_size
+            value: '13'
+        - type: item
+          name: Incoming - rolling 30d (actual observed)
+          x: '36'
+          y: '0'
+          width: '18'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.traffic.input.rolling.month
+          - type: INTEGER
+            name: decimal_places
+            value: '2'
+          - type: INTEGER
+            name: show.0
+            value: '1'
+          - type: INTEGER
+            name: show.1
+            value: '2'
+          - type: INTEGER
+            name: value_size
+            value: '44'
+          - type: INTEGER
+            name: desc_size
+            value: '13'
+        - type: item
+          name: Projected incoming / 30d (24h x 30)
+          x: '54'
+          y: '0'
+          width: '18'
+          height: '4'
+          fields:
+          - type: ITEM
+            name: itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.traffic.input.projected.30d
+          - type: INTEGER
+            name: decimal_places
+            value: '2'
+          - type: INTEGER
+            name: show.0
+            value: '1'
+          - type: INTEGER
+            name: show.1
+            value: '2'
+          - type: INTEGER
+            name: value_size
+            value: '44'
+          - type: INTEGER
+            name: desc_size
+            value: '13'
+        - type: svggraph
+          name: Traffic rate - incoming vs processed (B/s)
+          x: '0'
+          y: '4'
+          width: '36'
+          height: '8'
+          fields:
+          - type: STRING
+            name: ds.0.color.0
+            value: 17A2B8
+          - type: INTEGER
+            name: ds.0.dataset_type
+            value: '0'
+          - type: INTEGER
+            name: ds.0.fill
+            value: '2'
+          - type: INTEGER
+            name: ds.0.width
+            value: '2'
+          - type: ITEM
+            name: ds.0.itemids.0
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.traffic.input.bps
+          - type: STRING
+            name: ds.1.color.0
+            value: F59E0B
+          - type: INTEGER
+            name: ds.1.dataset_type
+            value: '0'
+          - type: INTEGER
+            name: ds.1.fill
+            value: '2'
+          - type: INTEGER
+            name: ds.1.width
+            value: '2'
+          - type: ITEM
+            name: ds.1.itemids.0
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.traffic.output.bps
+          - type: INTEGER
+            name: legend_columns
+            value: '2'
+          - type: INTEGER
+            name: legend_lines
+            value: '2'
+          - type: STRING
+            name: reference
+            value: RBAIX
+        - type: svggraph
+          name: Message rate - input vs output (messages/s)
+          x: '36'
+          y: '4'
+          width: '36'
+          height: '8'
+          fields:
+          - type: STRING
+            name: ds.0.color.0
+            value: 16A34A
+          - type: INTEGER
+            name: ds.0.dataset_type
+            value: '0'
+          - type: INTEGER
+            name: ds.0.fill
+            value: '2'
+          - type: INTEGER
+            name: ds.0.width
+            value: '2'
+          - type: ITEM
+            name: ds.0.itemids.0
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.throughput.cluster.input
+          - type: STRING
+            name: ds.1.color.0
+            value: 8B5CF6
+          - type: INTEGER
+            name: ds.1.dataset_type
+            value: '0'
+          - type: INTEGER
+            name: ds.1.fill
+            value: '2'
+          - type: INTEGER
+            name: ds.1.width
+            value: '2'
+          - type: ITEM
+            name: ds.1.itemids.0
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.throughput.cluster.output
+          - type: INTEGER
+            name: legend_columns
+            value: '2'
+          - type: INTEGER
+            name: legend_lines
+            value: '2'
+          - type: STRING
+            name: reference
+            value: DEUXW
+        - type: svggraph
+          name: Rolling 24h traffic - incoming vs processed (bytes)
+          x: '0'
+          y: '12'
+          width: '72'
+          height: '8'
+          fields:
+          - type: STRING
+            name: ds.0.color.0
+            value: 17A2B8
+          - type: INTEGER
+            name: ds.0.dataset_type
+            value: '0'
+          - type: INTEGER
+            name: ds.0.fill
+            value: '2'
+          - type: INTEGER
+            name: ds.0.width
+            value: '2'
+          - type: ITEM
+            name: ds.0.itemids.0
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.traffic.input.rolling.day
+          - type: STRING
+            name: ds.1.color.0
+            value: F59E0B
+          - type: INTEGER
+            name: ds.1.dataset_type
+            value: '0'
+          - type: INTEGER
+            name: ds.1.fill
+            value: '2'
+          - type: INTEGER
+            name: ds.1.width
+            value: '2'
+          - type: ITEM
+            name: ds.1.itemids.0
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.traffic.output.rolling.day
+          - type: INTEGER
+            name: legend_columns
+            value: '2'
+          - type: INTEGER
+            name: legend_lines
+            value: '2'
+          - type: STRING
+            name: reference
+            value: WHCHF
+        - type: svggraph
+          name: Rolling 30d traffic - observed input/output (bytes)
+          x: '0'
+          y: '20'
+          width: '72'
+          height: '8'
+          fields:
+          - type: STRING
+            name: ds.0.color.0
+            value: 17A2B8
+          - type: INTEGER
+            name: ds.0.dataset_type
+            value: '0'
+          - type: INTEGER
+            name: ds.0.fill
+            value: '2'
+          - type: INTEGER
+            name: ds.0.width
+            value: '2'
+          - type: ITEM
+            name: ds.0.itemids.0
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.traffic.input.rolling.month
+          - type: STRING
+            name: ds.1.color.0
+            value: F59E0B
+          - type: INTEGER
+            name: ds.1.dataset_type
+            value: '0'
+          - type: INTEGER
+            name: ds.1.fill
+            value: '2'
+          - type: INTEGER
+            name: ds.1.width
+            value: '2'
+          - type: ITEM
+            name: ds.1.itemids.0
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.traffic.output.rolling.month
+          - type: INTEGER
+            name: legend_columns
+            value: '2'
+          - type: INTEGER
+            name: legend_lines
+            value: '2'
+          - type: STRING
+            name: reference
+            value: BMTHW
