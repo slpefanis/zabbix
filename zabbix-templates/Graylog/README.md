@@ -1,125 +1,133 @@
 # Graylog Platform by HTTP
 
-Comprehensive monitoring of Graylog, OpenSearch Data Nodes, message ingestion, and Graylog Sidecars using the **Zabbix HTTP agent**.
+Comprehensive monitoring of Graylog, OpenSearch Data Nodes, message ingestion and Graylog Sidecars using **Zabbix 7.4**.
 
-This template provides centralized monitoring of a Graylog deployment through its REST API, with automatic discovery, operational alerts, historical ingestion reporting, and integrated dashboards.
+This community-maintained template provides centralized monitoring of Graylog deployments through the REST API, with automatic discovery, actionable alerts, historical ingestion reporting and operational dashboards.
 
-Designed for environments running multiple Graylog application nodes and Graylog-managed OpenSearch Data Nodes.
-
-**No custom scripts, external exporters, or Zabbix agents are required for API-based monitoring.**
+**Latest version:** v1.9.2  
+**Tested with:** Zabbix 7.4 and Graylog 7.1.11  
+**Status:** Import validated, live data collection operational, individual Sidecar offline alert confirmed
 
 ## Features
 
 ### Graylog application monitoring
 
-- Automatic discovery of Graylog application nodes.
-- Incoming and outgoing message throughput.
-- Per-node journal utilization and processing health.
-- Automatic discovery of configured Graylog inputs.
-- Per-input operational visibility.
-- Cluster-wide aggregation of application metrics.
+- Automatic discovery of Graylog application nodes
+- Incoming and outgoing message throughput
+- Per-node journal utilization
+- Graylog input discovery and monitoring
+- Cluster-wide processing metrics
 
 ### OpenSearch and Data Node monitoring
 
-- OpenSearch cluster health.
-- Data Node discovery and operational statistics.
-- Index storage consumption.
-- Total message index count.
-- Indices reporting unhealthy states.
-- Message indices without replicas.
-- Shard and storage visibility.
+- OpenSearch cluster health
+- Data Node discovery and statistics
+- Message index storage consumption
+- Message index count
+- Unhealthy indices
+- Message indices without replicas
+- Cluster storage and shard visibility
 
 OpenSearch metrics are collected through Graylog's authenticated Data Node API proxy. Direct OpenSearch access is not required.
 
 ### Graylog Sidecar monitoring
 
-- Automatic discovery of registered Sidecars.
-- Sidecar heartbeat age and online/offline status.
-- Collector status and failures.
-- Sidecar version and host information.
-- Consolidated collector health monitoring.
-- Detailed HTML diagnostics table.
+- Automatic discovery of registered Sidecars
+- Sidecar online/offline status
+- Last check-in and heartbeat age
+- Collector running, stopped and failed states
+- Collector error messages
+- Sidecar version and IP address
+- Consolidated Sidecar diagnostics table
+- Individual High-severity alerts for offline Sidecars
 
-The Sidecar diagnostics table displays discovered Sidecars with their status, IP address, version, last contact time, collectors, and reported errors.
+The diagnostics table prioritizes offline and failing Sidecars, displaying their status, address, version, last contact, collector state and reported errors.
 
-Problematic Sidecars appear first, allowing operators to identify failures without searching through individual hosts.
+### Individual Sidecar alerting
+
+**Introduced in v1.9.2**
+
+Each discovered Sidecar can generate its own Zabbix problem when it has been offline for more than five minutes.
+
+| Condition | Behaviour |
+|---|---|
+| Sidecar offline for over 5 minutes | High-severity problem |
+| Multiple Sidecars offline | Separate problems for each Sidecar |
+| Sidecar comes back online | Automatic recovery when the trigger condition clears |
+| Problem acknowledged | Acknowledgement and comments retained in Zabbix |
+| Sidecar removed from Graylog | Discovered monitoring objects follow Zabbix's lost-resource cleanup policy |
+
+Example problem:
+
+`Graylog: Sidecar example-server-01 offline`
+
+This approach supports operational accountability. An offline Sidecar remains a detectable problem even when the reason is known, such as an intentional server decommission.
+
+Operators can acknowledge the alert and document the reason without immediately closing or suppressing the underlying problem.
+
+**Acknowledgement is not resolution.** The problem remains active until its trigger condition clears or the discovered monitoring object is removed.
+
+Individual offline alerts are separate from the template's aggregate collector-health monitoring.
 
 ### Ingestion and capacity reporting
 
 Historical ingestion monitoring using Graylog's cumulative traffic counters.
 
-- Incoming and processed traffic in bytes per second.
-- Rolling 1-hour ingestion volume.
-- Rolling 24-hour ingestion volume.
-- Rolling 30-day ingestion volume.
-- Estimated 30-day ingestion based on the trailing 24-hour rate.
-- Incoming and outgoing traffic comparisons.
-- Historical throughput and volume graphs.
-- Per-application-node traffic collection.
+- Incoming and processed bytes per second
+- Rolling 1-hour ingestion volume
+- Rolling 24-hour ingestion volume
+- Rolling 30-day ingestion volume
+- Projected 30-day ingestion based on the trailing 24 hours
+- Incoming versus outgoing traffic comparisons
+- Historical throughput and volume graphs
+- Per-application-node traffic collection
 
-This provides a useful foundation for capacity planning, identifying ingestion trends, and estimating future log management licensing requirements.
+These measurements support capacity planning, ingestion trending and future log-management licensing assessments.
 
-**Important:** These metrics measure Graylog-reported traffic. They should not automatically be treated as the billable ingestion volume of another logging platform.
+Graylog traffic counters are not guaranteed to match another logging platform's billable ingestion volume.
 
 ## Requirements
 
 | Component | Requirement |
 |---|---|
-| Zabbix | 7.4 or later |
-| Graylog | 7.x |
+| Zabbix | Tested on 7.4 |
+| Graylog | Tested on 7.1.11 |
 | Graylog API | HTTPS access from the Zabbix server or proxy |
-| Authentication | Graylog service account with API token |
+| Authentication | Dedicated Graylog API token |
 | Data Nodes | Graylog-managed OpenSearch Data Nodes for OpenSearch monitoring |
 | Permissions | Reader, Sidecar Reader and custom Data Node monitoring role |
 
-The Zabbix server or proxy must be able to reach the Graylog REST API endpoint.
+The template is intended for a single logical Zabbix host representing the complete Graylog deployment.
 
-A valid TLS certificate chain is recommended.
+No custom scripts or external exporters are required for API-based monitoring.
 
-## Tested environment
-
-| Component | Version |
-|---|---|
-| Zabbix | 7.4 |
-| Graylog | 7.1.11 |
-| OpenSearch | Graylog-managed Data Nodes |
-| Template | 1.9.1 |
-
-The core monitoring functionality has been tested against the versions above. Dashboard changes in v1.9.1 should be validated after import.
-
-Compatibility with other versions of Graylog and Zabbix has not been fully established.
+Underlying operating systems, Nginx, MongoDB and other infrastructure components should be monitored separately.
 
 ## Installation
 
-### 1. Create a Graylog monitoring account
+### 1. Create a monitoring account
 
-In the Graylog web interface, navigate to:
+In Graylog, navigate to:
 
 **System → Users and Teams → Users**
 
-Create a dedicated monitoring account, for example:
+Create a dedicated monitoring account, such as:
 
 `zabbix-monitor`
 
-Generate an API token for this account.
-
-Assign the following roles:
+Generate an API token and assign these roles:
 
 | Role | Purpose |
 |---|---|
-| `Reader` | Access to Graylog monitoring information |
-| `Sidecar Reader` | Sidecar inventory and collector information |
-| `Zabbix Data Node Monitoring` | OpenSearch monitoring through the Data Node proxy |
+| Reader | Graylog operational information |
+| Sidecar Reader | Sidecar inventory and collector monitoring |
+| Zabbix Data Node Monitoring | Access to the OpenSearch monitoring proxy |
 
-The third role is custom and must be created as described below.
+The Data Node monitoring role is custom and must be created separately.
 
 ### 2. Create the Data Node monitoring role
 
-Graylog exposes selected OpenSearch operations through its authenticated Data Node API proxy.
-
-A custom role is required to grant access to this endpoint.
-
-Using a Graylog administrator account, execute:
+Use an authorized Graylog administrator account:
 
 ```bash
 curl -sS -i --max-time 15 \
@@ -138,247 +146,217 @@ curl -sS -i --max-time 15 \
   'https://graylog.example.com/api/roles'
 ```
 
-Replace `graylog.example.com` with your Graylog hostname.
+Replace the example hostname with your Graylog endpoint.
 
-The `-u admin` option prompts for the administrator's password.
+The administrator password is requested interactively.
 
-A successful creation returns HTTP `201 Created`.
+Assign the new role to the monitoring account.
 
-Assign the new role to the monitoring service account.
-
-**Security note:** The `datanode:opensearchproxy` permission provides access to Graylog's allowlisted OpenSearch proxy operations. Review its scope before assigning it and use a dedicated monitoring account.
+**Security:** The proxy uses Graylog's allowed OpenSearch operations. Review access before assigning this permission, and avoid using administrator credentials for routine monitoring.
 
 ### 3. Import the template
 
-In Zabbix:
-
-1. Navigate to **Data collection → Templates**.
+1. Open **Data collection → Templates** in Zabbix.
 2. Select **Import**.
-3. Import the latest `Graylog-Platform-v*.yaml` file.
-4. Create a host representing the complete Graylog platform.
+3. Import `Graylog-Platform-v1.9.2.yaml`.
+4. Create a logical host for the Graylog platform.
 5. Link the **Graylog Platform by HTTP** template.
-6. Configure the required macros.
-
-The template is intended to be linked to **one logical Zabbix host per Graylog deployment**, rather than a separate template instance for every Graylog application node.
-
-Application nodes, Data Nodes, inputs, and Sidecars are discovered automatically.
+6. Configure the macros below.
 
 ### 4. Configure macros
 
 | Macro | Description | Example |
 |---|---|---|
-| `{$GRAYLOG.API.URL}` | Graylog REST API base URL | `https://graylog.example.com/api` |
+| `{$GRAYLOG.API.URL}` | Graylog REST API URL | `https://graylog.example.com/api` |
 | `{$GRAYLOG.API.TOKEN}` | Monitoring account API token | Secret text |
-| `{$GRAYLOG.DATANODE.PROXY}` | Data Node hostname used by the OpenSearch proxy | `graylog-datanode.example.com` |
-
-The Data Node hostname must match a Data Node registered with Graylog.
+| `{$GRAYLOG.DATANODE.PROXY}` | Registered Graylog Data Node hostname | `graylog-datanode.example.com` |
 
 Store the API token as a **Secret text** macro.
 
-Do not commit API tokens or other credentials to source control.
+Do not commit tokens or other credentials to source control.
 
-### 5. Verify data collection
+### 5. Verify collection
 
-After linking the template and configuring its macros:
+After linking the template:
 
-1. Open **Monitoring → Latest data** for the logical Graylog host.
-2. Confirm that Graylog application metrics are being collected.
-3. Check discovery of application nodes and Data Nodes.
-4. Confirm that OpenSearch cluster health is available.
-5. Verify Sidecar discovery and status reporting.
-6. Check that cumulative traffic counters are increasing.
-7. Open the template dashboards.
+1. Open **Monitoring → Latest data** for the Graylog platform host.
+2. Confirm that application metrics are collecting.
+3. Verify application node, Data Node and Sidecar discovery.
+4. Check OpenSearch cluster health.
+5. Confirm cumulative traffic counters are increasing.
+6. Open the dashboard pages.
+7. Review individual offline Sidecar problems under **Monitoring → Problems**.
 
-Newly imported templates require time to populate historical graphs and rolling ingestion totals.
+Historical ingestion reporting requires collection time before rolling periods are fully populated.
 
 ## Dashboards
 
-The template includes four dashboard pages.
+Four dashboard pages are included.
 
 | Dashboard | Purpose |
 |---|---|
-| **Platform overview** | High-level Graylog operational status |
-| **Ingestion and storage** | Message throughput, index storage and index health |
-| **Sidecar diagnostics** | Detailed Sidecar and collector troubleshooting |
-| **Ingestion & capacity** | Historical traffic volume, trends and capacity planning |
+| **Platform overview** | Overall Graylog operational health |
+| **Ingestion and storage** | Processing throughput, index storage and index health |
+| **Sidecar diagnostics** | Sidecar inventory, status and collector errors |
+| **Ingestion & capacity** | Historical traffic volumes, trends and projections |
 
 ### Platform overview
 
-A high-level view of the Graylog environment, including cluster processing, operational health and key platform metrics.
-
-Designed to help answer:
-
-- Is Graylog operating normally?
-- Are application nodes processing messages?
-- Are there emerging processing or storage problems?
+Provides a high-level view of the Graylog deployment, focusing on operational health and important processing metrics.
 
 ### Ingestion and storage
 
-Provides operational metrics for message processing and OpenSearch storage, including:
+Displays message throughput, index storage, unhealthy indices and replica coverage.
 
-- Incoming and outgoing message rates.
-- Message index storage consumption.
-- Message index count.
-- Unhealthy indices.
-- Indices without replicas.
-
-This is intended as an operational summary rather than a replacement for Graylog's own index management interface.
+This is an operational summary rather than a replacement for Graylog's native index management interface.
 
 ### Sidecar diagnostics
 
-A consolidated HTML table showing Sidecar information.
+A consolidated HTML diagnostics table containing:
 
-Includes:
+- Sidecar name
+- Status
+- IP address
+- Version
+- Last seen
+- Collector states
+- Problem or error information
 
-- Sidecar name and address.
-- Online/offline status.
-- Sidecar version.
-- Heartbeat information.
-- Collector status.
-- Errors reported by collectors.
-
-Offline and failing collectors are prioritized for investigation.
+Offline and failing Sidecars appear first, making them easy to identify.
 
 ### Ingestion & capacity
 
-A dedicated page for understanding how much traffic Graylog receives and processes.
+Displays:
 
-Includes:
+- Rolling 24-hour incoming volume
+- Rolling 24-hour processed volume
+- Rolling 30-day observed incoming volume
+- Projected 30-day incoming volume
+- Incoming and processed traffic rates
+- Incoming and outgoing message throughput
+- Historical volume graphs
 
-- Rolling 24-hour incoming volume.
-- Rolling 24-hour processed volume.
-- Rolling 30-day incoming volume.
-- Projected 30-day incoming volume.
-- Incoming versus processed traffic rates.
-- Incoming versus outgoing message rates.
-- Historical rolling-volume graphs.
+The projected 30-day figure is an estimate derived from the trailing 24-hour period, not an actual monthly total.
 
-The projection is an estimate derived from the preceding 24 hours, not an observed 30-day total.
+## Understanding ingestion measurements
 
-## Understanding ingestion volume
-
-The template uses the following Graylog metrics:
+The template collects these Graylog counters:
 
 ```text
 org.graylog2.traffic.input
 org.graylog2.traffic.output
 ```
 
-These are cumulative counters collected from Graylog application nodes.
+They are cumulative application-node counters.
 
-Zabbix calculates traffic changes over time to derive throughput and historical volume.
+Zabbix calculates differences between observations to derive throughput and historical volume.
 
-### Measurement considerations
+### Important considerations
 
-**Cumulative counters:** Counters are process-relative and can reset after Graylog application restarts.
+- **Counter resets:** Application restarts can reset cumulative counters. Negative differences are discarded.
+- **Collection gaps:** Missed observations may cause ingestion volume to be undercounted.
+- **Historical availability:** Totals cannot reconstruct traffic from before collection began.
+- **Units:** Distinguish decimal GB from binary GiB when comparing reports.
+- **Licensing:** Incoming traffic, processed traffic and indexed storage are different measurements.
+- **Projections:** Estimated 30-day ingestion is not equivalent to observed 30-day consumption.
 
-**Counter resets:** Negative differences are discarded to prevent false negative ingestion values.
+For long-term accuracy, compare Zabbix's accumulated traffic history against Graylog's native ingestion reporting over equivalent time windows.
 
-**Collection gaps:** If an application node is unavailable or monitoring stops, ingestion volume may be undercounted.
+## Alerting and accountability
 
-**Historical data:** Rolling totals only include data collected since the monitoring items began recording history.
+The monitoring philosophy is to generate actionable problems without excessive alert noise.
 
-**Units:** Zabbix may automatically scale byte values into KiB, MiB and GiB. Be mindful of the difference between decimal GB and binary GiB.
+Individual Sidecar offline events receive their own High-severity problem, allowing separate investigation and acknowledgement.
 
-**Licensing:** Graylog input traffic, processed traffic, indexed storage, and another vendor's billable ingestion are not necessarily equivalent measurements.
+Collector failures can still be reported through aggregate health monitoring to avoid generating excessive alerts for multiple failures across the environment.
 
-For accurate long-term reporting, allow sufficient collection history to accumulate and periodically compare Zabbix totals with Graylog's native traffic reporting.
+### Recommended operational workflow
 
-## Discovery and collection architecture
+1. Zabbix detects an offline Sidecar.
+2. A High-severity problem is created for the affected Sidecar.
+3. An operator investigates and acknowledges the problem.
+4. The acknowledgement comment records the cause or accepted operational condition.
+5. The problem remains visible until recovery or inventory cleanup.
+6. Zabbix retains the problem and acknowledgement history according to its configuration.
 
-The template uses native Zabbix functionality:
+Example acknowledgement comment:
 
-- HTTP agent items for REST API collection.
-- Dependent items for extracting metrics.
-- Low-level discovery for dynamically managed components.
-- Calculated items for traffic aggregation and reporting.
-- JavaScript preprocessing where required.
-- Native dashboard widgets and an HTML diagnostics summary.
+`Server decommissioned. Awaiting removal from Graylog Sidecar inventory.`
 
-The architecture reduces unnecessary API requests by reusing collected JSON responses for dependent metrics.
+This avoids silently excluding legitimate outages simply because they may have an acceptable explanation.
 
-Monitoring is performed centrally through the Graylog API endpoint.
-
-## Alerting philosophy
-
-The template is designed to provide useful operational warnings without excessive alert noise.
-
-The primary objective is to detect platform issues requiring intervention, rather than generating individual alerts for every transient condition.
-
-Discovery and consolidated monitoring are used wherever practical.
-
-Notification actions, alert thresholds and recovery behavior should be reviewed and tested before production notification rules are enabled.
-
-## Limitations
-
-- API monitoring does not replace operating-system or infrastructure monitoring.
-- MongoDB, Nginx, disk hardware and underlying operating systems should be monitored with appropriate separate Zabbix templates.
-- OpenSearch API requests are limited by Graylog's Data Node proxy permissions and allowed operations.
-- Historical ingestion cannot be reconstructed from Zabbix counters before collection began.
-- Graylog traffic volume is not guaranteed to match another platform's licensing calculations.
-- The template does not perform index configuration or replica management.
-- Individual OpenSearch index discovery is intentionally excluded to avoid unnecessary monitoring noise.
+Automatic recovery, lost-resource cleanup and notification actions should be validated against each organization's Zabbix configuration.
 
 ## Troubleshooting
 
 ### No Graylog metrics
 
-Check the API URL, token, network connectivity and TLS certificate validation.
+Check the API URL, token, connectivity, TLS certificate validation and assigned permissions.
 
 ### OpenSearch metrics unavailable
 
-Confirm that the selected Data Node exists and that the monitoring account has the `datanode:opensearchproxy` permission.
+Confirm that the configured Data Node exists in Graylog and that the monitoring account has the `datanode:opensearchproxy` permission.
 
-Graylog's proxy restricts which OpenSearch API operations can be accessed.
+### Sidecars missing
 
-### Sidecar discovery missing
+Confirm that the monitoring account has Sidecar Reader access and that Sidecar discovery is working.
 
-Confirm that the monitoring account has `Sidecar Reader` permissions.
+### Offline Sidecar not generating a problem
+
+Check that:
+
+- The Sidecar is discovered.
+- Its heartbeat item is collecting data.
+- The offline trigger prototype has been instantiated.
+- The Sidecar has exceeded the configured offline threshold.
+- The trigger and discovered monitoring objects are enabled.
+
+### Decommissioned Sidecar remains visible
+
+A Sidecar that is no longer reporting may remain in Graylog's inventory.
+
+Acknowledging its Zabbix problem does not remove the Sidecar.
+
+Remove obsolete Sidecar registrations through the appropriate Graylog administration process when cleanup is authorized.
 
 ### Ingestion totals appear too low
 
-New counters require time to accumulate history.
+New items require time to accumulate history. Review collection gaps and application restarts before investigating discrepancies.
 
-Rolling 24-hour and 30-day totals will initially contain only the available collection period.
+### Projection displays no data
 
-Also check for application restarts or monitoring gaps.
+Confirm that the underlying traffic counters and rolling 24-hour calculated items are collecting and supported by the available history.
 
-### Projection reports no data
+## Limitations
 
-Verify that the source traffic metrics and rolling 24-hour aggregation are supported and collecting successfully.
-
-Do not treat a projection as valid until its source calculations have sufficient history.
-
-### Template import fails
-
-Confirm the Zabbix version and use the latest corrected template release.
-
-Zabbix validates dashboard layout fields and widget definitions strictly. Template YAML syntax validation alone does not guarantee successful import.
+- Does not replace operating-system or infrastructure monitoring.
+- Does not manage OpenSearch configuration or replicas.
+- Does not discover every individual OpenSearch index.
+- OpenSearch visibility is limited to operations permitted through Graylog's Data Node API proxy.
+- Historical ingestion cannot be reconstructed before Zabbix collection begins.
+- Traffic measurements are not guaranteed to match external vendor licensing calculations.
+- Notification actions, acknowledgements and recovery handling depend on Zabbix configuration.
+- Long-term ingestion accuracy is still being evaluated.
 
 ## Version history
 
 | Version | Changes |
 |---|---|
-| 1.6 | Stable platform monitoring and HTML Sidecar diagnostics |
-| 1.7 | Cumulative ingestion counters and rolling-volume reporting |
+| **1.9.2** | Individual High-severity offline Sidecar alerting with per-device problem identification |
+| 1.9.1 | Corrected dashboard widget coordinate field types; import validated |
+| 1.9 | Dashboard layout and presentation improvements |
 | 1.8 | Ingestion & Capacity dashboard with historical graphs |
-| 1.9 | Dashboard layout improvements |
-| 1.9.1 | Dashboard widget coordinate format correction |
+| 1.7 | Traffic byte counters and rolling-volume reporting |
+| 1.6 | Stable platform monitoring and HTML Sidecar diagnostics |
 
 ## Contributions
 
 Issues, feature requests and improvements are welcome through GitHub Issues.
 
-When reporting a problem, include:
+When reporting a problem, include the Zabbix version, Graylog version, template version and relevant error messages.
 
-- Zabbix version.
-- Graylog version.
-- Template version.
-- Relevant error message.
-- Whether the problem occurs during import, discovery or data collection.
-
-Please remove credentials, tokens and environment-specific information before sharing logs or exports.
+Remove credentials, API tokens and environment-specific information before sharing logs or exports.
 
 ---
 
-**Community-maintained integration.** Not an official Zabbix or Graylog template.
+**Community-maintained template. Not an official Zabbix or Graylog integration.**
