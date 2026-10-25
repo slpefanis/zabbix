@@ -1,0 +1,52 @@
+# ==========================================
+# Zabbix Templates / Monitoring Repository
+# ==========================================
+
+# Secrets and credentials
+.env
+.env.*
+!.env.example
+*.secret
+*.secrets
+*credentials*.json
+*credentials*.yaml
+*credentials*.yml
+*token*.txt
+*.key
+*.pfx
+*.p12
+*.p8
+
+# Local environment configuration
+config.local.*
+settings.local.*
+*.local.json
+*.local.yaml
+*.local.yml
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# IDE / editor
+.vscode/
+.idea/
+
+# Generated output
+output/
+temp/
+.cache/
