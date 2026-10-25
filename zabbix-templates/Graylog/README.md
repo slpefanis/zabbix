@@ -75,7 +75,7 @@ Assign the new role to the monitoring service account.
 
 ### 3. Configure Zabbix
 
-1. Import `Graylog-Platform-v1.6.yaml`.
+1. Import `Graylog-Platform.yaml`.
 2. Create a host representing your Graylog environment.
 3. Link the **Graylog Platform by HTTP** template.
 4. Configure the required macros.
