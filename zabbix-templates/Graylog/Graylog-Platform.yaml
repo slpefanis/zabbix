@@ -7,12 +7,13 @@ zabbix_export:
   - uuid: d7272a8440d744b895533be1e7bf3d92
     template: Graylog Platform by HTTP
     name: Graylog Platform by HTTP
-    description: 'Single-host Graylog 7.1 API monitoring. Zabbix 7.4. Uses central HTTPS API with dedicated monitoring API token as
-      HTTP Basic username and literal token as password. Set {$GRAYLOG.API.URL} and {$GRAYLOG.DATANODE.PROXY} for your deployment, and
-      define {$GRAYLOG.API.TOKEN} as a secret macro on the monitored host. Do not import onto existing host without resolving conflicting
-      legacy items. All thresholds conservative; raw API failures surface as unsupported items (no silent zero fallback). Sidecar per-host
-      discovery is informational, aggregate failure alert only by default. All requests use Graylog API proxy, never direct OpenSearch.
-      OpenSearch _cat indexes have zero replicas on some message indices: informational exposure, no replication action performed.'
+    description: 'Single-host Graylog 7.1 API monitoring. Zabbix 7.4. Uses central HTTPS API with dedicated monitoring
+      API token as HTTP Basic username and literal token as password. Set {$GRAYLOG.API.URL} and {$GRAYLOG.DATANODE.PROXY}
+      for your deployment, and define {$GRAYLOG.API.TOKEN} as a secret macro on the monitored host. Do not import onto
+      existing host without resolving conflicting legacy items. All thresholds conservative; raw API failures surface
+      as unsupported items (no silent zero fallback). Sidecar per-host discovery is informational, aggregate failure
+      alert only by default. All requests use Graylog API proxy, never direct OpenSearch. OpenSearch _cat indexes have
+      zero replicas on some message indices: informational exposure, no replication action performed.'
     groups:
     - name: Templates/Applications
     tags:
@@ -285,7 +286,8 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - var j=JSON.parse(value);var v=j.number_of_data_nodes; if(v===undefined||v===null) throw "Missing field"; return v;
+        - var j=JSON.parse(value);var v=j.number_of_data_nodes; if(v===undefined||v===null) throw "Missing field"; return
+          v;
       tags:
       - tag: component
         value: metric
@@ -308,7 +310,8 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - var j=JSON.parse(value);var v=j.unassigned_shards; if(v===undefined||v===null) throw "Missing field"; return v;
+        - var j=JSON.parse(value);var v=j.unassigned_shards; if(v===undefined||v===null) throw "Missing field"; return
+          v;
       tags:
       - tag: component
         value: metric
@@ -331,7 +334,8 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - var j=JSON.parse(value);var v=j.number_of_pending_tasks; if(v===undefined||v===null) throw "Missing field"; return v;
+        - var j=JSON.parse(value);var v=j.number_of_pending_tasks; if(v===undefined||v===null) throw "Missing field";
+          return v;
       tags:
       - tag: component
         value: metric
@@ -354,8 +358,8 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - var j=JSON.parse(value);var v=j.active_shards_percent_as_number; if(v===undefined||v===null) throw "Missing field"; return
-          v;
+        - var j=JSON.parse(value);var v=j.active_shards_percent_as_number; if(v===undefined||v===null) throw "Missing
+          field"; return v;
       tags:
       - tag: component
         value: metric
@@ -534,9 +538,9 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - var j=JSON.parse(value);var keys=Object.keys(j);if(!keys.length)throw "No nodes";var sum=0;keys.forEach(function(k){var a=j[k].metrics.filter(function(m){return
-          m.full_name==="org.graylog2.throughput.input.1-sec-rate";});if(a.length!==1||typeof a[0].metric.value!=="number")throw "Missing
-          input rate for "+k;sum+=a[0].metric.value;});return sum;
+        - var j=JSON.parse(value);var keys=Object.keys(j);if(!keys.length)throw "No nodes";var sum=0;keys.forEach(function(k){var
+          a=j[k].metrics.filter(function(m){return m.full_name==="org.graylog2.throughput.input.1-sec-rate";});if(a.length!==1||typeof
+          a[0].metric.value!=="number")throw "Missing input rate for "+k;sum+=a[0].metric.value;});return sum;
       tags:
       - tag: component
         value: metric
@@ -552,9 +556,9 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - var j=JSON.parse(value);var keys=Object.keys(j);if(!keys.length)throw "No nodes";var sum=0;keys.forEach(function(k){var a=j[k].metrics.filter(function(m){return
-          m.full_name==="org.graylog2.throughput.output.1-sec-rate";});if(a.length!==1||typeof a[0].metric.value!=="number")throw "Missing
-          output rate for "+k;sum+=a[0].metric.value;});return sum;
+        - var j=JSON.parse(value);var keys=Object.keys(j);if(!keys.length)throw "No nodes";var sum=0;keys.forEach(function(k){var
+          a=j[k].metrics.filter(function(m){return m.full_name==="org.graylog2.throughput.output.1-sec-rate";});if(a.length!==1||typeof
+          a[0].metric.value!=="number")throw "Missing output rate for "+k;sum+=a[0].metric.value;});return sum;
       tags:
       - tag: component
         value: metric
@@ -570,13 +574,65 @@ zabbix_export:
       preprocessing:
       - type: JAVASCRIPT
         parameters:
-        - var a=JSON.parse(value);var units={b:1,kb:1024,mb:1048576,gb:1073741824,tb:1099511627776,pb:1125899906842624};var sum=0;a.forEach(function(x){if(!/^graylog_/.test(x.index))return;var
-          m=String(x["store.size"]).toLowerCase().match(/^([0-9.]+)(b|kb|mb|gb|tb|pb)$/);if(!m)throw "Unrecognised size for "+x.index;sum+=Number(m[1])*units[m[2]];});return
-          Math.round(sum);
+        - var a=JSON.parse(value);var units={b:1,kb:1024,mb:1048576,gb:1073741824,tb:1099511627776,pb:1125899906842624};var
+          sum=0;a.forEach(function(x){if(!/^graylog_/.test(x.index))return;var m=String(x["store.size"]).toLowerCase().match(/^([0-9.]+)(b|kb|mb|gb|tb|pb)$/);if(!m)throw
+          "Unrecognised size for "+x.index;sum+=Number(m[1])*units[m[2]];});return Math.round(sum);
       tags:
       - tag: component
         value: metric
       units: B
+    - uuid: e00c4302c53249e4b594efed2833cd02
+      name: 'Graylog: Sidecar diagnostics HTML report'
+      type: DEPENDENT
+      key: graylog.sidecars.report.html
+      history: 1d
+      value_type: TEXT
+      description: Single HTML snapshot of all Sidecars, sorted by offline, collector failures, stopped, then healthy.
+        Output is limited to avoid oversized text item values.
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - "var data = JSON.parse(value);\nif (!data.sidecars || !Array.isArray(data.sidecars)) throw 'Missing Sidecar\
+          \ array';\nif (typeof data.total === 'number' && data.sidecars.length !== data.total) throw 'Incomplete Sidecar\
+          \ page: ' + data.sidecars.length + '/' + data.total;\nvar now = Date.now();\nfunction esc(v) { return String(v\
+          \ == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;');\
+          \ }\nfunction duration(ms) {\n  if (!isFinite(ms) || ms < 0) return 'unknown';\n  var sec = Math.floor(ms/1000);\n\
+          \  if (sec < 60) return sec + 's';\n  var m = Math.floor(sec/60); if (m < 60) return m + 'm';\n  var h = Math.floor(m/60);\
+          \ if (h < 24) return h + 'h ' + (m%60) + 'm';\n  return Math.floor(h/24) + 'd ' + (h%24) + 'h';\n}\nvar rows\
+          \ = data.sidecars.map(function(s) {\n  var details = s.node_details || {};\n  var st = details.status || {};\n\
+          \  var c = st.collectors || [];\n  var failures = c.filter(function(x){return Number(x.status)===2;});\n  var\
+          \ stopped = c.filter(function(x){return Number(x.status)===1;});\n  var running = c.filter(function(x){return\
+          \ Number(x.status)===0;}).length;\n  var last = s.last_seen ? Date.parse(s.last_seen) : NaN;\n  var age = isFinite(last)\
+          \ ? Math.max(0,now-last) : Infinity;\n  var state = !s.active ? 'OFFLINE' : failures.length ? 'FAILING' : stopped.length\
+          \ ? 'STOPPED' : 'HEALTHY';\n  var rank = state==='OFFLINE' ? 0 : state==='FAILING' ? 1 : state==='STOPPED'\
+          \ ? 2 : 3;\n  var messages = c.filter(function(x){return Number(x.status)!==0;}).map(function(x){return x.message\
+          \ || x.verbose_message || 'Collector issue';});\n  if (!messages.length && rank<3 && st.message) messages=[st.message];\n\
+          \  var detail = messages.join('; ');\n  if (detail.length>140) detail=detail.slice(0,137)+'...';\n  var collectorText\
+          \ = running + ' running';\n  if (failures.length) collectorText += ', ' + failures.length + ' failing';\n \
+          \ if (stopped.length) collectorText += ', ' + stopped.length + ' stopped';\n  if (!c.length) collectorText\
+          \ = 'No collectors reported';\n  return {rank:rank,age:age,name:s.node_name||s.node_id||'unknown',ip:details.ip||'',version:s.sidecar_version||'',state:state,collectorText:collectorText,detail:detail};\n\
+          });\nrows.sort(function(a,b){return a.rank-b.rank || b.age-a.age || a.name.localeCompare(b.name);});\nvar offline=rows.filter(function(x){return\
+          \ x.rank===0;}).length;\nvar failing=rows.filter(function(x){return x.rank===1;}).length;\nvar stopped=rows.filter(function(x){return\
+          \ x.rank===2;}).length;\nvar h=['<div style=\"font-family:Arial,sans-serif;font-size:12px;color:#e5e7eb;background-color:#202328\"\
+          >',\n'<div style=\"padding:8px 10px;color:#e5e7eb;background-color:#202328\"><b>Sidecars: '+rows.length+'</b>\
+          \ &nbsp; | &nbsp; <span style=\"color:#fca5a5\">Offline: '+offline+'</span> &nbsp; | &nbsp; <span style=\"\
+          color:#fdba74\">Failing: '+failing+'</span> &nbsp; | &nbsp; Stopped: '+stopped+'</div>',\n'<table style=\"\
+          width:100%;table-layout:fixed;border-collapse:collapse;font-size:12px;color:#e5e7eb;background-color:#262a30\"\
+          \ border=\"1\" cellpadding=\"5\" cellspacing=\"0\">',\n'<thead><tr style=\"background-color:#303743;color:#ffffff\"\
+          ><th width=\"18%\" align=\"left\">Sidecar</th><th width=\"9%\" align=\"left\">Status</th><th width=\"11%\"\
+          \ align=\"left\">IP address</th><th width=\"7%\" align=\"left\">Version</th><th width=\"9%\" align=\"left\"\
+          >Last seen</th><th width=\"13%\" align=\"left\">Collectors</th><th width=\"33%\" align=\"left\">Problem / error</th></tr></thead><tbody>'];\n\
+          rows.forEach(function(r){\n  var bg=r.rank===0?'#48272e':r.rank===1?'#473323':r.rank===2?'#423b28':'#262a30';\n\
+          \  var accent=r.rank===0?'#fca5a5':r.rank===1?'#fdba74':r.rank===2?'#fde68a':'#86efac';\n  var style=' style=\"\
+          background-color:'+bg+';color:#f8fafc\"';\n  h.push('<tr'+style+'><td style=\"color:#f8fafc\">'+esc(r.name)+'</td><td><b\
+          \ style=\"color:'+accent+'\">'+r.state+'</b></td><td>'+esc(r.ip)+'</td><td>'+esc(r.version)+'</td><td>'+duration(r.age)+'</td><td>'+esc(r.collectorText)+'</td><td>'+esc(r.detail)+'</td></tr>');\n\
+          });\nh.push('</tbody></table></div>');\nvar html=h.join('');\nif (html.length>60000) throw 'Sidecar report\
+          \ exceeds 60k characters: '+html.length;\nreturn html;"
+      master_item:
+        key: graylog.sidecars.raw
+      tags:
+      - tag: component
+        value: sidecar
     discovery_rules:
     - uuid: cf9925e13a174e3eb6baf86085fca608
       name: Graylog application nodes discovery
@@ -686,7 +742,8 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var v=j.journal_size_limit; if(v===undefined||v===null) throw "Missing field"; return v;
+          - var j=JSON.parse(value);var v=j.journal_size_limit; if(v===undefined||v===null) throw "Missing field"; return
+            v;
         tags:
         - tag: component
           value: metric
@@ -702,7 +759,8 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var v=j.uncommitted_journal_entries; if(v===undefined||v===null) throw "Missing field"; return v;
+          - var j=JSON.parse(value);var v=j.uncommitted_journal_entries; if(v===undefined||v===null) throw "Missing field";
+            return v;
         tags:
         - tag: component
           value: metric
@@ -733,8 +791,9 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var n=j["{#NODEID}"];if(!n)throw "Node absent";var a=n.metrics.filter(function(x){return x.full_name==="org.graylog2.throughput.input.1-sec-rate";});if(a.length!==1)throw
-            "Metric absent";return a[0].metric.value;
+          - var j=JSON.parse(value);var n=j["{#NODEID}"];if(!n)throw "Node absent";var a=n.metrics.filter(function(x){return
+            x.full_name==="org.graylog2.throughput.input.1-sec-rate";});if(a.length!==1)throw "Metric absent";return
+            a[0].metric.value;
         tags:
         - tag: component
           value: metric
@@ -750,8 +809,9 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var n=j["{#NODEID}"];if(!n)throw "Node absent";var a=n.metrics.filter(function(x){return x.full_name==="org.graylog2.throughput.output.1-sec-rate";});if(a.length!==1)throw
-            "Metric absent";return a[0].metric.value;
+          - var j=JSON.parse(value);var n=j["{#NODEID}"];if(!n)throw "Node absent";var a=n.metrics.filter(function(x){return
+            x.full_name==="org.graylog2.throughput.output.1-sec-rate";});if(a.length!==1)throw "Metric absent";return
+            a[0].metric.value;
         tags:
         - tag: component
           value: metric
@@ -811,8 +871,9 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data Node missing";var
-            x=a[0]["heap.percent"];if(x===undefined||x===null||x==="")throw "Metric missing";return Number(x);
+          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data
+            Node missing";var x=a[0]["heap.percent"];if(x===undefined||x===null||x==="")throw "Metric missing";return
+            Number(x);
         tags:
         - tag: component
           value: metric
@@ -828,8 +889,9 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data Node missing";var
-            x=a[0]["ram.percent"];if(x===undefined||x===null||x==="")throw "Metric missing";return Number(x);
+          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data
+            Node missing";var x=a[0]["ram.percent"];if(x===undefined||x===null||x==="")throw "Metric missing";return
+            Number(x);
         tags:
         - tag: component
           value: metric
@@ -845,8 +907,8 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data Node missing";var
-            x=a[0]["cpu"];if(x===undefined||x===null||x==="")throw "Metric missing";return Number(x);
+          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data
+            Node missing";var x=a[0]["cpu"];if(x===undefined||x===null||x==="")throw "Metric missing";return Number(x);
         tags:
         - tag: component
           value: metric
@@ -862,8 +924,8 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data Node missing";var
-            x=a[0]["load_1m"];if(x===undefined||x===null||x==="")throw "Metric missing";return Number(x);
+          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data
+            Node missing";var x=a[0]["load_1m"];if(x===undefined||x===null||x==="")throw "Metric missing";return Number(x);
         tags:
         - tag: component
           value: metric
@@ -878,8 +940,9 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data Node missing";var
-            x=a[0]["disk.used_percent"];if(x===undefined||x===null||x==="")throw "Metric missing";return Number(x);
+          - var j=JSON.parse(value);var a=j.filter(function(n){return n.name==="{#DNNAME}";});if(a.length!==1)throw "Data
+            Node missing";var x=a[0]["disk.used_percent"];if(x===undefined||x===null||x==="")throw "Metric missing";return
+            Number(x);
         tags:
         - tag: component
           value: metric
@@ -926,8 +989,8 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j["{#NODEID}"];if(!a)throw "Node input list absent";var b=a.filter(function(x){return x.id==="{#INPUTID}";});if(b.length!==1)throw
-            "Input missing";return b[0].state==="RUNNING"?1:0;
+          - var j=JSON.parse(value);var a=j["{#NODEID}"];if(!a)throw "Node input list absent";var b=a.filter(function(x){return
+            x.id==="{#INPUTID}";});if(b.length!==1)throw "Input missing";return b[0].state==="RUNNING"?1:0;
         tags:
         - tag: component
           value: metric
@@ -966,28 +1029,29 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw "Sidecar
-            missing";var s=a[0];return s.active?1:0;
+          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw
+            "Sidecar missing";var s=a[0];return s.active?1:0;
         tags:
         - tag: component
           value: metric
       - uuid: ee9273dc46c842f9b5e6a9fb6d490840
         name: 'Sidecar {#SCNAME}: heartbeat age'
         type: DEPENDENT
-        key: graylog.sidecar.heartbeat.age[{#SCID}]
-        value_type: FLOAT
+        key: graylog.sidecar.heartbeat.seconds[{#SCID}]
+        value_type: UNSIGNED
         history: 30d
         master_item:
           key: graylog.sidecars.raw
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw "Sidecar
-            missing";var s=a[0];if(!s.last_seen)throw "No heartbeat";return Math.max(0,(Date.now()-Date.parse(s.last_seen))/60000);
+          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw
+            "Sidecar missing";var s=a[0];if(!s.last_seen)throw "No heartbeat";var ts=Date.parse(s.last_seen);if(!isFinite(ts))throw
+            "Invalid heartbeat timestamp";return Math.max(0,Math.floor((Date.now()-ts)/1000));
         tags:
         - tag: component
           value: metric
-        units: m
+        units: s
       - uuid: 6b3339091b1c48ac8165b22c8898cedb
         name: 'Sidecar {#SCNAME}: failing collectors'
         type: DEPENDENT
@@ -999,8 +1063,8 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw "Sidecar
-            missing";var s=a[0];return (s.node_details&&s.node_details.status&&s.node_details.status.collectors||[]).filter(function(c){return
+          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw
+            "Sidecar missing";var s=a[0];return (s.node_details&&s.node_details.status&&s.node_details.status.collectors||[]).filter(function(c){return
             c.status===2;}).length;
         tags:
         - tag: component
@@ -1016,8 +1080,8 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw "Sidecar
-            missing";var s=a[0];if(!s.sidecar_version)throw "Version missing";return s.sidecar_version;
+          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw
+            "Sidecar missing";var s=a[0];if(!s.sidecar_version)throw "Version missing";return s.sidecar_version;
         tags:
         - tag: component
           value: metric
@@ -1032,9 +1096,32 @@ zabbix_export:
         preprocessing:
         - type: JAVASCRIPT
           parameters:
-          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw "Sidecar
-            missing";var s=a[0];var st=s.node_details&&s.node_details.status||{};var bad=(st.collectors||[]).filter(function(c){return
-            c.status!==0;}).map(function(c){return c.message||"Collector not running";});return (bad.length?bad.join(" | "):(st.message||"Unknown")).substring(0,250);
+          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw
+            "Sidecar missing";var s=a[0];var st=s.node_details&&s.node_details.status||{};var bad=(st.collectors||[]).filter(function(c){return
+            c.status!==0;}).map(function(c){return c.message||"Collector not running";});return (bad.length?bad.join("
+            | "):(st.message||"Unknown")).substring(0,250);
+        tags:
+        - tag: component
+          value: metric
+      - uuid: e7acb17621834660a51efd723964e88c
+        name: 'Sidecar {#SCNAME}: diagnostic summary'
+        type: DEPENDENT
+        key: graylog.sidecar.diagnostics[{#SCID}]
+        value_type: TEXT
+        history: 30d
+        master_item:
+          key: graylog.sidecars.raw
+        preprocessing:
+        - type: JAVASCRIPT
+          parameters:
+          - var j=JSON.parse(value);var a=j.sidecars.filter(function(x){return x.node_id==="{#SCID}";});if(a.length!==1)throw
+            "Sidecar missing";var s=a[0];var st=s.node_details&&s.node_details.status||{};var cs=st.collectors||[];var
+            bad=cs.filter(function(c){return c.status!==0;});var ts=Date.parse(s.last_seen||"");var age=isFinite(ts)?Math.max(0,Math.floor((Date.now()-ts)/1000)):null;function
+            ageStr(v){if(v===null)return "unknown";if(v>=86400)return Math.floor(v/86400)+"d "+Math.floor(v%86400/3600)+"h";if(v>=3600)return
+            Math.floor(v/3600)+"h "+Math.floor(v%3600/60)+"m";if(v>=60)return Math.floor(v/60)+"m "+(v%60)+"s";return
+            v+"s";}var status=s.active?"ONLINE":"OFFLINE";var msgs=bad.map(function(c){return c.message||"Collector status
+            "+c.status;});return (status+" | "+(s.node_details&&s.node_details.ip||"unknown IP")+" | v"+(s.sidecar_version||"?")+"
+            | last "+ageStr(age)+" | "+bad.length+" collector issue(s)"+(msgs.length?" | "+msgs.join("; "):"")).substring(0,2000);
         tags:
         - tag: component
           value: metric
@@ -1264,242 +1351,36 @@ zabbix_export:
             value: '0'
       - name: Sidecar diagnostics
         widgets:
-        - type: item
-          name: Registered Sidecars
+        - type: itemhistory
+          name: Sidecar inventory - offline and failures first
           x: '0'
           y: '0'
-          width: '18'
-          height: '4'
-          fields:
-          - type: ITEM
-            name: itemid
-            value:
-              host: Graylog Platform by HTTP
-              key: graylog.sidecars.total
-          - type: INTEGER
-            name: decimal_places
-            value: '0'
-        - type: item
-          name: Active Sidecars
-          x: '18'
-          y: '0'
-          width: '18'
-          height: '4'
-          fields:
-          - type: ITEM
-            name: itemid
-            value:
-              host: Graylog Platform by HTTP
-              key: graylog.sidecars.active
-          - type: INTEGER
-            name: decimal_places
-            value: '0'
-        - type: item
-          name: Offline Sidecars
-          x: '36'
-          y: '0'
-          width: '18'
-          height: '4'
-          fields:
-          - type: ITEM
-            name: itemid
-            value:
-              host: Graylog Platform by HTTP
-              key: graylog.sidecars.offline
-          - type: INTEGER
-            name: decimal_places
-            value: '0'
-        - type: item
-          name: Failing collector hosts
-          x: '54'
-          y: '0'
-          width: '18'
-          height: '4'
-          fields:
-          - type: ITEM
-            name: itemid
-            value:
-              host: Graylog Platform by HTTP
-              key: graylog.sidecars.failing
-          - type: INTEGER
-            name: decimal_places
-            value: '0'
-        - type: topitems
-          name: Collector failures — highest first
-          x: '0'
-          y: '5'
-          width: '36'
-          height: '13'
-          fields:
-          - type: STRING
-            name: columns.0.items.0
-            value: 'Sidecar *: failing collectors'
-          - type: INTEGER
-            name: columns.0.decimal_places
-            value: '0'
-          - type: INTEGER
-            name: item_ordering_order_by
-            value: '3'
-          - type: INTEGER
-            name: item_ordering_order
-            value: '2'
-          - type: INTEGER
-            name: item_ordering_limit
-            value: '40'
-          - type: INTEGER
-            name: layout
-            value: '1'
-          - type: INTEGER
-            name: show_problems
-            value: '0'
-          - type: STRING
-            name: columns.0.thresholds.0.color
-            value: E53935
-          - type: STRING
-            name: columns.0.thresholds.0.threshold
-            value: '1'
-        - type: topitems
-          name: Heartbeat age — oldest first
-          x: '36'
-          y: '5'
-          width: '36'
-          height: '13'
-          fields:
-          - type: STRING
-            name: columns.0.items.0
-            value: 'Sidecar *: heartbeat age'
-          - type: INTEGER
-            name: columns.0.decimal_places
-            value: '0'
-          - type: INTEGER
-            name: item_ordering_order_by
-            value: '3'
-          - type: INTEGER
-            name: item_ordering_order
-            value: '2'
-          - type: INTEGER
-            name: item_ordering_limit
-            value: '40'
-          - type: INTEGER
-            name: layout
-            value: '1'
-          - type: INTEGER
-            name: show_problems
-            value: '0'
-          - type: STRING
-            name: columns.0.thresholds.0.color
-            value: E53935
-          - type: STRING
-            name: columns.0.thresholds.0.threshold
-            value: '5'
-        - type: topitems
-          name: All Sidecars — collector health
-          x: '0'
-          y: '19'
-          width: '36'
-          height: '15'
-          fields:
-          - type: STRING
-            name: columns.0.items.0
-            value: 'Sidecar *: failing collectors'
-          - type: INTEGER
-            name: columns.0.decimal_places
-            value: '0'
-          - type: INTEGER
-            name: item_ordering_order_by
-            value: '3'
-          - type: INTEGER
-            name: item_ordering_order
-            value: '2'
-          - type: INTEGER
-            name: item_ordering_limit
-            value: '100'
-          - type: INTEGER
-            name: layout
-            value: '1'
-          - type: INTEGER
-            name: show_problems
-            value: '0'
-          - type: STRING
-            name: columns.0.thresholds.0.color
-            value: E53935
-          - type: STRING
-            name: columns.0.thresholds.0.threshold
-            value: '1'
-        - type: topitems
-          name: Sidecar versions
-          x: '36'
-          y: '19'
-          width: '36'
-          height: '15'
-          fields:
-          - type: STRING
-            name: columns.0.items.0
-            value: 'Sidecar *: Sidecar version'
-          - type: INTEGER
-            name: columns.0.decimal_places
-            value: '0'
-          - type: INTEGER
-            name: item_ordering_order_by
-            value: '3'
-          - type: INTEGER
-            name: item_ordering_order
-            value: '3'
-          - type: INTEGER
-            name: item_ordering_limit
-            value: '100'
-          - type: INTEGER
-            name: layout
-            value: '1'
-          - type: INTEGER
-            name: show_problems
-            value: '0'
-          - type: STRING
-            name: columns.0.thresholds.0.color
-            value: E53935
-          - type: STRING
-            name: columns.0.thresholds.0.threshold
-            value: '0'
-        - type: topitems
-          name: Collector diagnosis — reported status
-          x: '0'
-          y: '35'
           width: '72'
-          height: '13'
+          height: '22'
           fields:
+          - type: ITEM
+            name: columns.0.itemid
+            value:
+              host: Graylog Platform by HTTP
+              key: graylog.sidecars.report.html
           - type: STRING
-            name: columns.0.items.0
-            value: 'Sidecar *: collector detail'
+            name: columns.0.name
+            value: Sidecar status and diagnostics
           - type: INTEGER
-            name: columns.0.decimal_places
+            name: columns.0.display
+            value: '4'
+          - type: INTEGER
+            name: show_lines
+            value: '1'
+          - type: INTEGER
+            name: show_timestamp
             value: '0'
           - type: INTEGER
-            name: item_ordering_order_by
-            value: '3'
-          - type: INTEGER
-            name: item_ordering_order
-            value: '3'
-          - type: INTEGER
-            name: item_ordering_limit
-            value: '100'
+            name: show_column_header
+            value: '0'
           - type: INTEGER
             name: layout
             value: '1'
-          - type: INTEGER
-            name: show_problems
-            value: '0'
           - type: STRING
-            name: columns.0.thresholds.0.color
-            value: E53935
-          - type: STRING
-            name: columns.0.thresholds.0.threshold
-            value: '0'
-          - type: INTEGER
-            name: columns.0.display_value_as
-            value: '2'
-          - type: STRING
-            name: columns.0.highlights.0.color
-            value: E53935
-          - type: STRING
-            name: columns.0.highlights.0.pattern
-            value: (?i)(failing|could not|no ping|stopped|error|failed)
+            name: reference
+            value: SCREP
